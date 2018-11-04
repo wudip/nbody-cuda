@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<script>
+function showParticles() {
+  var canvas = document.getElementById("a");
+  var input = document.getElementById("b");
+  var rows = input.value.split('\n');
+  var color = "#"+((1<<24)*Math.random()|0).toString(16);
+  rows.forEach(function (row) {
+    var cols = row.split(' ');
+    var mass = cols[2];
+    var x = cols[0];
+    var y = cols[1];
+    printParticle(canvas, mass, x, y, color);
+  });
+}
+
+function printParticle(canvas, mass, x, y, color) {
+  if(x === undefined || y === undefined) return;  
+  var canvasCenterX = 100;
+  var canvasCenterY = 100;
+  var scale = 5;
+  x *= scale;
+  y *= scale;
+  x += canvasCenterX;
+  y += canvasCenterY;
+  var elem = document.createElement("div");
+  elem.className = "point";
+  elem.style.left = x + "px";
+  elem.style.top = y + "px";
+  elem.style.background = color;
+  canvas.appendChild(elem);
+}
+</script>
+<style>
+.point {
+  width: 5px;
+  height: 5px;
+  background: blue;
+  position: absolute;
+}
+</style>
+</head>
+<body>
+<div id="a" style="background:yellow; width: 500px; height:500px; position:relative;"></div>
+<textarea id="b" rows="10" cols="50"></textarea>
+<input onclick="showParticles()" value="zobraz" type="submit"/>
+</body>
+</html>
