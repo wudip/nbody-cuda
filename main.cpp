@@ -2,34 +2,26 @@
 #include <vector>
 #include <math.h>
 
+#include "particle.cpp"
+
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
+// #define GRAVITATION_CONSTANT 6.67408e-11
+#define GRAVITATION_CONSTANT 6.67300E-11
 
 using namespace std;
 
-struct Particle {
-  double x;
-  double y;
-  double mass;
-  Particle(double _x, double _y, double _mass): x(_x), y(_y), mass(_mass) {};
-};
-
-struct MoveVector {
-  double x;
-  double y;
-  MoveVector(): x(0), y(0) {};
-  MoveVector(double _x, double _y): x(_x), y(_y) {};
-};
-
 vector<Particle> loadParticles(istream& input);
-vector<MoveVector> nbody(const vector<Particle>& particles);
-void moveParticles(vector<Particle>& particles, const vector<MoveVector>& forces);
+vector<Vec3<double>> nbody(const vector<Particle>& particles);
+void moveParticles(vector<Particle>& particles, const vector<Vec3<double>>& forces);
 void printParticles(const vector<Particle>& particles, ostream& out);
 
 int main(int argc, char** argv) {
   vector<Particle> particles = loadParticles(cin);
-  vector<MoveVector> forces = nbody(particles);
-  moveParticles(particles, forces);
+  for(int i = 0; i < 500; ++i) {
+    vector<Vec3<double>> forces = nbody(particles);
+    moveParticles(particles, forces);
+  }
   printParticles(particles, cout);
   return 0;
 }
@@ -38,40 +30,36 @@ vector<Particle> loadParticles(istream& input) {
   vector<Particle> particles;
   double x;
   double y;
+  double z;
   double mass;
-  while(input >> x && input >> y && input >> mass) {
-    particles.push_back(Particle(x, y, mass));
+  while(input >> x && input >> y && input >> z && input >> mass) {
+    particles.push_back(Particle(x, y, z, mass));
   }
   return particles;
 }
 
 
-vector<MoveVector> nbody(const vector<Particle>& particles) {
-  vector<MoveVector> forces;
+vector<Vec3<double>> nbody(const vector<Particle>& particles) {
+  vector<Vec3<double>> forces;
   for (auto it1 = particles.begin(); it1 < particles.end(); ++it1) {
-    double forceX = 0;
-    double forceY = 0;
+    Vec3<double> res(0, 0, 0);
     for (auto it2 = particles.begin(); it2 < particles.end(); ++it2) {
       if (it1 == it2) continue;
-      double distX = it1->x - it2->x;
-      double distY = it1->y - it2->y;
-      double vectorSizeSqr = distX * distX + distY * distY;
-      double bottom = pow(vectorSizeSqr + SOFTENING_FACTOR_SQR, 1.5);
-      double massTotal = it1->mass * it2->mass;
-      forceX -= (massTotal * distX) / bottom;
-      forceY -= (massTotal * distY) / bottom;
+      Vec3<double> diff = it1->direction - it2->direction;
+      double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
+      double massTotal = GRAVITATION_CONSTANT * it1->mass * it2->mass;
+      res += diff * massTotal / bottom;
     }
-    forces.push_back(MoveVector(forceX, forceY));
+    forces.push_back(res);
   }
   return forces;
 }
 
-void moveParticles(vector<Particle>& particles, const vector<MoveVector>& forces) {
+void moveParticles(vector<Particle>& particles, const vector<Vec3<double>>& forces) {
   auto particleIt = particles.begin();
   auto forceIt = forces.begin();
   while(particleIt < particles.end() && forceIt < forces.end()) {
-    particleIt->x += forceIt->x;
-    particleIt->y += forceIt->y;
+    particleIt->direction += *forceIt;
     ++particleIt;
     ++forceIt;
   }
@@ -79,9 +67,6 @@ void moveParticles(vector<Particle>& particles, const vector<MoveVector>& forces
 
 void printParticles(const vector<Particle>& particles, ostream& out) {
   for(auto it = particles.begin(); it < particles.end(); ++it) {
-    double x = it->x;
-    double y = it->y;
-    double mass = it->mass;
-    out << x << " " << y << " " << mass << endl;
+    cout << *it << endl;
   }
 }

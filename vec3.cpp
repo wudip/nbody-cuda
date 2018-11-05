@@ -93,10 +93,14 @@ template <class T> class Vec3 {
             y /= value;
             z /= value;
         }
+ 
+        T sqrSize() {
+            return x * x + y * y + z * z;
+        }
 
         template <typename U>
         friend std::ostream& operator<<( std::ostream &o, const Vec3<U> &vector) {
-            o << "Vec3(" << vector.x << ", " << vector.y << ", " << vector.z << ")";
+            o << vector.x << " " << vector.y << " " << vector.z;
             return o;
         }
 };

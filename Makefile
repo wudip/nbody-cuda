@@ -2,7 +2,7 @@ CC=c++
 CFLAG=-g -Wall -std=c++11
 
 all:
-	$(CC) $(CFLAG) vec3.cpp particle.cpp test.cpp -o app
+	$(CC) $(CFLAG) main.cpp -o nbody
 
 clean:
-	rm -f app
+	rm -f nbody
