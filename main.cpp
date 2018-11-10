@@ -19,13 +19,13 @@ void printParticles(const vector<Particle> * particles, ostream& out);
 
 int main(int argc, char** argv) {
   vector<Particle> * particles = loadParticles(cin);
-  clock_t start = clock();
+  clock_t clk_start = clock();
   for(int i = 0; i < 500; ++i) {
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
   }
-  clock_t end = clock();
-  cout << "Time: " << (end - start) << " ms" << endl;
+  clock_t clk_end = clock();
+  cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
   printParticles(particles, cout);
   delete particles;
   return 0;
@@ -63,8 +63,9 @@ void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& for
   auto particleIt = particles->begin();
   auto forceIt = forces.begin();
   while(particleIt < particles->end() && forceIt < forces.end()) {
-    // particleIt->position += *forceIt / particleIt->mass;
-    particleIt->position += *forceIt;
+    Vec3<double> acceleration = *forceIt / particleIt->mass;
+    particleIt->velocity += acceleration;
+    particleIt->updatePosition();
     ++particleIt;
     ++forceIt;
   }
