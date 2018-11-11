@@ -3,7 +3,7 @@
 #include <math.h>
 #include <ctime>
 
-#include "particle.cpp"
+#include "cell.cpp"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
@@ -20,7 +20,13 @@ void printParticles(const vector<Particle> * particles, ostream& out);
 int main(int argc, char** argv) {
   vector<Particle> * particles = loadParticles(cin);
   clock_t start = clock();
-  for(int i = 0; i < 500; ++i) {
+  for(int i = 0; i < 1; ++i) {
+    double min[3] = {-5., -5., -5.};
+    double max[3] = {20., 20., 20.};
+    Cell octree(min, max);
+    for(auto it = particles->begin(); it < particles->end(); ++it) {
+        octree.add(*it);
+    }
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
   }
