@@ -11,6 +11,13 @@ class Particle {
         Particle(Vec3<double> position, double mass) : position(position), velocity(Vec3<double>(0, 0, 0)), mass(mass) { };
         Particle& operator=(const Particle & p) = default;
 
+        /**
+         * Updates position of the particle according to its velocity
+         */
+        void updatePosition() {
+            position += velocity;
+        }
+
         friend std::ostream& operator<<( std::ostream &o, const Particle &particle) {
             o << particle.position << " " << particle.mass;
             return o;
