@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     double max[3] = {20., 20., 20.};
     Cell octree(min, max);
     for(auto it = particles->begin(); it < particles->end(); ++it) {
-        octree.add(*it);
+        octree.add(&*it);
     }
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);

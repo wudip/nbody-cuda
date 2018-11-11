@@ -12,11 +12,10 @@ using namespace std;
  * Octree cell
  */
 class Cell {
-    Particle part;
+    Particle * part;
     Cell * subtree[NUM_OF_SUBCELLS];
     double boundariesMin[NUM_OF_DIMENSIONS];
     double boundariesMax[NUM_OF_DIMENSIONS];
-    bool partEngaged;
     /**
      * Splits the cell into 2^{@link #NUM_OF_DIMENSIONS} cells. They are stored in {@link #subtree} variable.
      */
@@ -27,14 +26,13 @@ public:
     Cell() = delete;
     Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS]);
     ~Cell();
-    void add(Particle &);
-
-    Cell *getSubcell(Particle &particle);
+    void add(Particle *);
+    Cell * getSubcell(Particle * particle);
 
 };
 
 Cell::Cell(const double *boundMin, const double *boundMax):
-    partEngaged(false)
+    part(nullptr)
 {
     subtree[0] = nullptr;
     for (int dim = 0; dim < NUM_OF_DIMENSIONS; ++dim) {
@@ -51,20 +49,19 @@ Cell::~Cell() {
     }
 }
 
-void Cell::add(Particle & particle) {
+void Cell::add(Particle * particle) {
     if(boundariesMin[0] == 0 && boundariesMax[0] == 0) return;
     if (subtree[0]) {
         Cell * cell = getSubcell(particle);
         cell->add(particle);
     }
-    else if (partEngaged) {
+    else if (part) {
         split();
         add(part);
         add(particle);
     }
     else {
         part = particle;
-        partEngaged = true;
     }
 }
 
@@ -92,11 +89,11 @@ void Cell::splitDimension(int dimension, int index, double *boundMin, double *bo
     splitDimension(dimension + 1, index + (int) pow(2, dimension), boundMin, boundMax);
 }
 
-Cell *Cell::getSubcell(Particle &particle) {
+Cell *Cell::getSubcell(Particle * particle) {
     double position[NUM_OF_DIMENSIONS];
-    position[0] = particle.position.x;
-    position[1] = particle.position.y;
-    position[2] = particle.position.z;
+    position[0] = particle->position.x;
+    position[1] = particle->position.y;
+    position[2] = particle->position.z;
     int index = 0;
     for (int dim = 0; dim < NUM_OF_DIMENSIONS; ++dim) {
         double min = boundariesMin[dim];
