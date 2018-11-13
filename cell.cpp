@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 #include "particle.cpp"
 
@@ -21,6 +21,7 @@ class Cell {
      */
     void split();
     void splitDimension(int dimension, int index, double boundMin[NUM_OF_DIMENSIONS], double boundMax[NUM_OF_DIMENSIONS]);
+    void printCell(ostream & ost, int & id) const;
 
 public:
     Cell() = delete;
@@ -28,7 +29,7 @@ public:
     ~Cell();
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
-
+    void printGraph(ostream & ost) const;
 };
 
 Cell::Cell(const double *boundMin, const double *boundMax):
@@ -71,6 +72,28 @@ void Cell::split() {
     delete [] tempBoundMax;
 }
 
+//void split2() {
+//    double tempBoundMin[NUM_OF_DIMENSIONS];
+//    double tempBoundMax[NUM_OF_DIMENSIONS];
+//    for (int subcell = 0; subcell < NUM_OF_SUBCELLS; ++subcell) {
+//        for (int dimension = 0; dimension < NUM_OF_DIMENSIONS; ++dimension) {
+//            int dimThBit = (1 << dimension) & subcell; // if true, will get center + max
+//            double min = minPoint.getDim(dimension);
+//            double max = maxPoint.getDim(dimension);
+//            double center = (min + max) / 2;
+//            if (dimThBit) {
+//                tempBoundMin[dimension] = center;
+//                tempBoundMax[dimension] = max;
+//            }
+//            else {
+//                tempBoundMin[dimension] = min;
+//                tempBoundMax[dimension] = center;
+//            }
+//        }
+//        subtree[subcell] = new Cell(tempBoundMin, tempBoundMax);
+//    }
+//}
+
 void Cell::splitDimension(int dimension, int index, double *boundMin, double *boundMax) {
     if (dimension == NUM_OF_DIMENSIONS) {
         subtree[index] = new Cell(boundMin, boundMax);
@@ -99,4 +122,26 @@ Cell *Cell::getSubcell(Particle * particle) {
         }
     }
     return subtree[index];
+}
+
+// DEBUG
+
+void Cell::printCell(ostream & ost, int & id) const {
+    int myId = id++;
+    ost << "a" << myId << "[label=\"" << minPoint << "\\n" << maxPoint << "\\n";
+    if (part) ost << part->getPosition();
+    else ost << "---";
+    ost << "\"]" << endl;
+    if (!subtree[0]) return;
+    for (int subcell = 0; subcell < NUM_OF_SUBCELLS; ++subcell) {
+        ost << "a" << myId << " -> a" << id << endl;
+        subtree[subcell]->printCell(ost, id);
+    }
+}
+
+void Cell::printGraph(ostream & ost) const {
+    ost << "digraph koprovkaaknedliky {" << endl;
+    int id = 0;
+    printCell(ost, id);
+    ost << "}" << endl;
 }

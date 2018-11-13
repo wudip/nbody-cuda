@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
     for(auto it = particles->begin(); it < particles->end(); ++it) {
         octree.add(&*it);
     }
+    octree.printGraph(std::cout);
     vector<Vec3<double>> forcesEstimation = nbodyBarnesHut(octree);
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
@@ -52,6 +53,7 @@ vector<Particle> * loadParticles(istream& input) {
 
 vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   vector<Vec3<double>> forces;
+  forces.reserve(particles->size());
   for (auto it1 = particles->begin(); it1 < particles->end(); ++it1) {
     Vec3<double> res(0, 0, 0);
     for (auto it2 = particles->begin(); it2 < particles->end(); ++it2) {
