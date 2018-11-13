@@ -103,4 +103,18 @@ template <class T> class Vec3 {
             o << vector.x << " " << vector.y << " " << vector.z;
             return o;
         }
+
+        double getDim(int dimension) const {
+            if (dimension == 0) return x;
+            if (dimension == 1) return y;
+            if (dimension == 2) return z;
+            throw "Dimension out of range";
+        }
+
+        void setDim(int dimension, const double value) {
+            if (dimension == 0) x = value;
+            else if (dimension == 1) y = value;
+            else if (dimension == 2) z = value;
+            else throw "Dimension out of range";
+        }
 };

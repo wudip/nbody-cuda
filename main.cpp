@@ -1,13 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <ctime>
 
 #include "cell.cpp"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
-// #define GRAVITATION_CONSTANT 6.67408e-11
 #define GRAVITATION_CONSTANT 6.67300E-11
 
 using namespace std;
@@ -16,6 +15,7 @@ vector<Particle> * loadParticles(istream& input);
 vector<Vec3<double>> nbody(const vector<Particle> * particles);
 void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
+vector<Vec3<double>> nbodyBarnesHut(Cell & cell);
 
 int main(int argc, char** argv) {
   vector<Particle> * particles = loadParticles(cin);
@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
     for(auto it = particles->begin(); it < particles->end(); ++it) {
         octree.add(&*it);
     }
+    vector<Vec3<double>> forcesEstimation = nbodyBarnesHut(octree);
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
   }
@@ -55,7 +56,7 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
     Vec3<double> res(0, 0, 0);
     for (auto it2 = particles->begin(); it2 < particles->end(); ++it2) {
       if (it1 == it2) continue;
-      Vec3<double> diff = it1->position - it2->position;
+      Vec3<double> diff = it1->getPosition() - it2->getPosition();
       double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
       double massTotal = GRAVITATION_CONSTANT * it1->mass * it2->mass;
       res += diff * massTotal / bottom;
@@ -65,12 +66,16 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
+vector<Vec3<double>> nbodyBarnesHut(Cell & cell) {
+    return vector<Vec3<double>>();
+}
+
 void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces) {
   auto particleIt = particles->begin();
   auto forceIt = forces.begin();
   while(particleIt < particles->end() && forceIt < forces.end()) {
     Vec3<double> acceleration = *forceIt / particleIt->mass;
-    particleIt->velocity += acceleration;
+    particleIt->accelerate(acceleration);
     particleIt->updatePosition();
     ++particleIt;
     ++forceIt;

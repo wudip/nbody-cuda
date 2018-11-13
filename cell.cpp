@@ -14,8 +14,8 @@ using namespace std;
 class Cell {
     Particle * part;
     Cell * subtree[NUM_OF_SUBCELLS];
-    double boundariesMin[NUM_OF_DIMENSIONS];
-    double boundariesMax[NUM_OF_DIMENSIONS];
+    Vec3<double> minPoint;
+    Vec3<double> maxPoint;
     /**
      * Splits the cell into 2^{@link #NUM_OF_DIMENSIONS} cells. They are stored in {@link #subtree} variable.
      */
@@ -32,12 +32,11 @@ public:
 };
 
 Cell::Cell(const double *boundMin, const double *boundMax):
-    part(nullptr)
+    part(nullptr), subtree{nullptr, nullptr, nullptr}
 {
-    subtree[0] = nullptr;
     for (int dim = 0; dim < NUM_OF_DIMENSIONS; ++dim) {
-        boundariesMin[dim] = boundMin[dim];
-        boundariesMax[dim] = boundMax[dim];
+        minPoint.setDim(dim, boundMin[dim]);
+        maxPoint.setDim(dim, boundMax[dim]);
     }
 }
 
@@ -50,7 +49,6 @@ Cell::~Cell() {
 }
 
 void Cell::add(Particle * particle) {
-    if(boundariesMin[0] == 0 && boundariesMax[0] == 0) return;
     if (subtree[0]) {
         Cell * cell = getSubcell(particle);
         cell->add(particle);
@@ -78,8 +76,8 @@ void Cell::splitDimension(int dimension, int index, double *boundMin, double *bo
         subtree[index] = new Cell(boundMin, boundMax);
         return;
     }
-    double min = boundariesMin[dimension];
-    double max = boundariesMax[dimension];
+    double min = minPoint.getDim(dimension);
+    double max = maxPoint.getDim(dimension);
     double center = (min + max) / 2;
     boundMin[dimension] = min;
     boundMax[dimension] = center;
@@ -90,16 +88,12 @@ void Cell::splitDimension(int dimension, int index, double *boundMin, double *bo
 }
 
 Cell *Cell::getSubcell(Particle * particle) {
-    double position[NUM_OF_DIMENSIONS];
-    position[0] = particle->position.x;
-    position[1] = particle->position.y;
-    position[2] = particle->position.z;
     int index = 0;
     for (int dim = 0; dim < NUM_OF_DIMENSIONS; ++dim) {
-        double min = boundariesMin[dim];
-        double max = boundariesMax[dim];
+        double min = minPoint.getDim(dim);
+        double max = maxPoint.getDim(dim);
         double center = (min + max) / 2;
-        double posDim = position[dim];
+        double posDim = particle->getPosition().getDim(dim);
         if (posDim > center) {
             index += (int) pow(2, dim);
         }
