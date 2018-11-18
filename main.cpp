@@ -16,18 +16,18 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles);
 void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
 vector<Vec3<double>> nbodyBarnesHut(Cell & cell);
+double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
   vector<Particle> * particles = loadParticles(cin);
   clock_t clk_start = clock();
-  for(int i = 0; i < 1; ++i) {
-    double min[3] = {-5., -5., -5.};
-    double max[3] = {20., 20., 20.};
-    Cell octree(min, max);
+  for(int i = 0; i < 1000; ++i) {
+    double * particleBoundaries = computeParticleBoundaries(particles);
+    Cell octree(particleBoundaries, particleBoundaries + 3);
+    delete[] particleBoundaries;
     for(auto it = particles->begin(); it < particles->end(); ++it) {
         octree.add(&*it);
     }
-    octree.printGraph(std::cout);
     vector<Vec3<double>> forcesEstimation = nbodyBarnesHut(octree);
     vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
@@ -69,7 +69,9 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 }
 
 vector<Vec3<double>> nbodyBarnesHut(Cell & cell) {
-    return vector<Vec3<double>>();
+    vector<Vec3<double>> forces;
+    forces.reserve(particles->size());
+    return forces;
 }
 
 void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces) {
@@ -82,6 +84,31 @@ void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& for
     ++particleIt;
     ++forceIt;
   }
+}
+
+/**
+ * Computes coordinates of smallest possible box containing all the particles
+ * @return array of minimum point and maximum point: [min_x, min_y, min_z, max_x, max_y, max_z]
+ */
+double * computeParticleBoundaries(const vector<Particle> * particles) {
+    double * result = new double[6];
+    for (int i = 0; i < 3; ++i) {
+        result[i] = INFINITY;
+        result[3 + i] = -INFINITY;
+    }
+    for (auto it = particles->begin(); it < particles->end(); ++it) {
+        Vec3<double> pos = it->getPosition();
+        for (int dim = 0; dim < 3; ++dim) {
+            int coord = pos.getDim(dim);
+            if (coord < result[dim]) {
+                result[dim] = coord;
+            }
+            if (coord > result[3 + dim]) {
+                result[3 + dim] = coord;
+            }
+        }
+    }
+    return result;
 }
 
 void printParticles(const vector<Particle> * particles, ostream& out) {
