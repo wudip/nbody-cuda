@@ -83,7 +83,7 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 
 void nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     int size = (int) particles->size();
-    Particle* arr = acc_malloc(sizeof(Particle) * size);
+    Particle* arr = (Particle*) acc_malloc(sizeof(Particle) * size);
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         arr[pit - particles->begin()] = *pit;
     }
