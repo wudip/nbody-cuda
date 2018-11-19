@@ -162,7 +162,7 @@ void Cell::printGraph(ostream & ost) const {
 }
 
 void Cell::updateCenter() {
-    Vec3<double> cpos = Vec3<double>(0, 0, 0);
+    Vec3<double> cpos();
     double mass = 0;
     if (part) {
         Vec3<double> position = part->getPosition();
