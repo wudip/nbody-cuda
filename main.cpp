@@ -3,6 +3,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <openacc.h>
 
 #include "cell.cpp"
 
