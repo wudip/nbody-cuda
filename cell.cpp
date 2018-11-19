@@ -6,13 +6,24 @@
 #define NUM_OF_SUBCELLS 8
 #define NUM_OF_DIMENSIONS 3
 
+#define SOFTENING_FACTOR_SQR 0.5
+#define GRAVITATION_CONSTANT 6.67300E-11
+
 using namespace std;
+
+void addToForces(Vec3<double>& forces, Particle* particle, Particle* sibPart) {
+    Vec3<double> diff = particle->getPosition() - sibPart->getPosition();
+    double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
+    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart->mass;
+    forces += diff * massTotal / bottom;
+}
 
 /**
  * Octree cell
  */
 class Cell {
     Particle * part;
+    Cell * parent;
     Cell * subtree[NUM_OF_SUBCELLS];
     Vec3<double> minPoint;
     Vec3<double> maxPoint;
@@ -22,24 +33,50 @@ class Cell {
     void split();
     void printCell(ostream & ost, int & id) const;
     void getCenter(Vec3<double> & center, double & mass) const;
+    void getForceSiblings(const Cell * c, Vec3<double>& forces) const {
+        if (parent) {
+            for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
+                Cell * sibling = parent->subtree[i];
+                if (sibling == this) continue;
+                Particle* sibPart = sibling->getCenter();
+                Particle* particle = c->part;
+                addToForces(forces, particle, sibPart);
+            }
+        }
+    }
 
 public:
     Cell() = delete;
     Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS]);
+    Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS], Cell * daddy);
     ~Cell();
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
     void printGraph(ostream & ost) const;
     Particle * getCenter() const;
+    Vec3<double> getForce() const {
+        Vec3<double> potato(0, 0, 0);
+        const Cell * c = this;
+        while (c->parent) {
+            getForceSiblings(c, potato);
+            c = c->parent;
+        }
+        return potato;
+    }
 };
 
-Cell::Cell(const double *boundMin, const double *boundMax):
-    part(nullptr), subtree{nullptr, nullptr, nullptr}
+Cell::Cell(const double *boundMin, const double *boundMax, Cell * daddy):
+    part(nullptr), parent(daddy), subtree{nullptr, nullptr, nullptr}
 {
     for (int dim = 0; dim < NUM_OF_DIMENSIONS; ++dim) {
         minPoint.setDim(dim, boundMin[dim]);
         maxPoint.setDim(dim, boundMax[dim]);
     }
+}
+
+Cell::Cell(const double *boundMin, const double *boundMax):
+    Cell(boundMin, boundMax, nullptr)
+{
 }
 
 Cell::~Cell() {
@@ -62,6 +99,7 @@ void Cell::add(Particle * particle) {
     }
     else {
         part = particle;
+        particle->cell = this;
     }
 }
 
@@ -83,7 +121,7 @@ void Cell::split() {
                 tempBoundMax[dimension] = center;
             }
         }
-        subtree[subcell] = new Cell(tempBoundMin, tempBoundMax);
+        subtree[subcell] = new Cell(tempBoundMin, tempBoundMax, this);
     }
 }
 
@@ -124,14 +162,13 @@ void Cell::printGraph(ostream & ost) const {
 }
 
 Particle * Cell::getCenter() const {
-    Vec3<double> * center = new Vec3<double>();
+    Vec3<double> center(0, 0, 0);
     double mass = 0;
-    getCenter(*center, mass);
-    center->x /= mass;
-    center->y /= mass;
-    center->z /= mass;
-    Particle particle = new Particle(center->x, center->y, center->z, mass);
-    delete center;
+    if (part || subtree[0]) {
+        getCenter(center, mass);
+        center /= mass;
+    }
+    Particle * particle = new Particle(center.x, center.y, center.z, mass);
     return particle;
 }
 

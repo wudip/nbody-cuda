@@ -17,7 +17,7 @@ vector<Particle> * loadParticles(istream& input);
 vector<Vec3<double>> nbody(const vector<Particle> * particles);
 void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
-vector<Vec3<double>> nbodyBarnesHut(Cell & cell);
+vector<Vec3<double>> nbodyBarnesHut(const vector<Particle> * particles, Cell & cell);
 double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
     for(auto it = particles->begin(); it < particles->end(); ++it) {
         octree.add(&*it);
     }
-    vector<Vec3<double>> forcesEstimation = nbodyBarnesHut(octree);
-    vector<Vec3<double>> forces = nbody(particles);
+    vector<Vec3<double>> forces = nbodyBarnesHut(particles, octree);
+    //vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
   }
   clock_t clk_end = clock();
@@ -79,8 +79,13 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
-vector<Vec3<double>> nbodyBarnesHut(Cell & cell) {
+vector<Vec3<double>> nbodyBarnesHut(const vector<Particle> * particles, Cell & cell) {
     vector<Vec3<double>> forces;
+    forces.reserve(particles->size());
+    for (auto partit = particles->begin(); partit < particles->end(); ++partit) {
+        Vec3<double> f = partit->cell->getForce();
+        forces.push_back(f);
+    }
     return forces;
 }
 
