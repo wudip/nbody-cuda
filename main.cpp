@@ -15,9 +15,9 @@ using namespace std;
 
 vector<Particle> * loadParticles(istream& input);
 vector<Vec3<double>> nbody(const vector<Particle> * particles);
-void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces);
+void moveParticles(vector<Particle> * particles, const Vec3<double>* forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
-vector<Vec3<double>> nbodyBarnesHut(const vector<Particle> * particles, Cell & cell);
+Vec3<double>* nbodyBarnesHut(const vector<Particle> * particles, Cell & cell);
 double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
         octree.add(&*it);
     }
     octree.updateCenter();
-    vector<Vec3<double>> forces = nbodyBarnesHut(particles, octree);
+    Vec3<double>* forces = nbodyBarnesHut(particles, octree);
     //vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
   }
@@ -80,22 +80,21 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
-vector<Vec3<double>> nbodyBarnesHut(const vector<Particle> * particles, Cell & cell) {
-    vector<Vec3<double>> forces;
-    forces.reserve(particles->size());
+Vec3<double>* nbodyBarnesHut(const vector<Particle> * particles, Cell & cell) {
+    Vec3<double> * forces = new Vec3<double>[particles->size()];
     #pragma acc parallel loop
     for (auto partit = particles->begin(); partit < particles->end(); ++partit) {
         Vec3<double> f = partit->cell->getForce();
         int index = (int)(partit - particles->begin());
-        forces.at(index) = f;
+        forces[index] = f;
     }
     return forces;
 }
 
-void moveParticles(vector<Particle> * particles, const vector<Vec3<double>>& forces) {
+void moveParticles(vector<Particle> * particles, const Vec3<double>* forces) {
   auto particleIt = particles->begin();
-  auto forceIt = forces.begin();
-  while(particleIt < particles->end() && forceIt < forces.end()) {
+  auto forceIt = forces;
+  while(particleIt < particles->end()) {
     Vec3<double> acceleration = *forceIt / particleIt->mass;
     particleIt->accelerate(acceleration);
     particleIt->updatePosition();
