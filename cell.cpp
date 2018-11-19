@@ -21,6 +21,7 @@ class Cell {
      */
     void split();
     void printCell(ostream & ost, int & id) const;
+    void getCenter(Vec3<double> * center, double & mass) const;
 
 public:
     Cell() = delete;
@@ -29,6 +30,7 @@ public:
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
     void printGraph(ostream & ost) const;
+    Particle * getCenter() const;
 };
 
 Cell::Cell(const double *boundMin, const double *boundMax):
@@ -119,4 +121,26 @@ void Cell::printGraph(ostream & ost) const {
     int id = 0;
     printCell(ost, id);
     ost << "}" << endl;
+}
+
+Particle * Cell::getCenter() const {
+    Vec3<double> * center = new Vec3<double>();
+    double mass = 0;
+    getCenter(center, mass);
+    Particle * particle = new Particle(center->x, center->y, center->z, mass);
+    delete center;
+    return particle;
+}
+
+void Cell::getCenter(Vec3<double> * center, double & mass) const {
+    if (part) {
+        Vec3<double> position = part->getPosition();
+        center->set(position.x, position.y, position.z);
+        mass += part->mass;
+    }
+    if (subtree[0]) {
+        for (int i = 0; i < NUM_OF_DIMENSIONS; ++i) {
+            subtree[i]->getCenter(center, mass);
+        }
+    }
 }

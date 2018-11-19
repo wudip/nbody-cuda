@@ -70,7 +70,6 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 
 vector<Vec3<double>> nbodyBarnesHut(Cell & cell) {
     vector<Vec3<double>> forces;
-    forces.reserve(particles->size());
     return forces;
 }
 
