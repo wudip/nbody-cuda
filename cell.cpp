@@ -30,7 +30,7 @@ public:
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
     void printGraph(ostream & ost) const;
-    Vec3<double> * getCenter() const;
+    Particle * getCenter() const;
 };
 
 Cell::Cell(const double *boundMin, const double *boundMax):
@@ -123,14 +123,16 @@ void Cell::printGraph(ostream & ost) const {
     ost << "}" << endl;
 }
 
-Vec3<double> * Cell::getCenter() const {
+Particle * Cell::getCenter() const {
     Vec3<double> * center = new Vec3<double>();
     double mass = 0;
     getCenter(*center, mass);
     center->x /= mass;
     center->y /= mass;
     center->z /= mass;
-    return center;
+    Particle particle = new Particle(center->x, center->y, center->z, mass);
+    delete center;
+    return particle;
 }
 
 void Cell::getCenter(Vec3<double> & center, double & mass) const {
