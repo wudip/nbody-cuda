@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
     nbodyBarnesHut(particles, octree);
     //vector<Vec3<double>> forces = nbody(particles);
     // moveParticles(particles, forces);
-    delete forces;
   }
   clock_t clk_end = clock();
   cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
@@ -97,7 +96,7 @@ void nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         *pit = arr[pit - particles->begin()];
     }
-    acc_free(arr)
+    acc_free(arr);
 }
 
 void moveParticles(vector<Particle> * particles, const Vec3<double>* forces) {
