@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
     for(auto it = particles->begin(); it < particles->end(); ++it) {
         octree.add(&*it);
     }
+    octree.updateCenter();
     vector<Vec3<double>> forces = nbodyBarnesHut(particles, octree);
     //vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);

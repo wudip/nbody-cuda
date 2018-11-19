@@ -11,10 +11,10 @@
 
 using namespace std;
 
-void addToForces(Vec3<double>& forces, Particle* particle, Particle* sibPart) {
-    Vec3<double> diff = particle->getPosition() - sibPart->getPosition();
+void addToForces(Vec3<double>& forces, Particle* particle, Particle& sibPart) {
+    Vec3<double> diff = particle->getPosition() - sibPart.getPosition();
     double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
-    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart->mass;
+    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart.mass;
     forces += diff * massTotal / bottom;
 }
 
@@ -23,6 +23,7 @@ void addToForces(Vec3<double>& forces, Particle* particle, Particle* sibPart) {
  */
 class Cell {
     Particle * part;
+    Particle center;
     Cell * parent;
     Cell * subtree[NUM_OF_SUBCELLS];
     Vec3<double> minPoint;
@@ -32,13 +33,12 @@ class Cell {
      */
     void split();
     void printCell(ostream & ost, int & id) const;
-    void getCenter(Vec3<double> & center, double & mass) const;
     void getForceSiblings(const Cell * c, Vec3<double>& forces) const {
         if (parent) {
             for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
                 Cell * sibling = parent->subtree[i];
                 if (sibling == this) continue;
-                Particle* sibPart = sibling->getCenter();
+                Particle& sibPart = sibling->center;
                 Particle* particle = c->part;
                 addToForces(forces, particle, sibPart);
             }
@@ -53,7 +53,7 @@ public:
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
     void printGraph(ostream & ost) const;
-    Particle * getCenter() const;
+    void updateCenter();
     Vec3<double> getForce() const {
         Vec3<double> potato(0, 0, 0);
         const Cell * c = this;
@@ -161,27 +161,25 @@ void Cell::printGraph(ostream & ost) const {
     ost << "}" << endl;
 }
 
-Particle * Cell::getCenter() const {
-    Vec3<double> center(0, 0, 0);
+void Cell::updateCenter() {
+    Vec3<double> cpos = Vec3<double>(0, 0, 0);
     double mass = 0;
-    if (part || subtree[0]) {
-        getCenter(center, mass);
-        center /= mass;
-    }
-    Particle * particle = new Particle(center.x, center.y, center.z, mass);
-    return particle;
-}
-
-void Cell::getCenter(Vec3<double> & center, double & mass) const {
     if (part) {
         Vec3<double> position = part->getPosition();
         double m = part->mass;
-        center += position * m;
+        cpos += position * m;
         mass += m;
     }
     if (subtree[0]) {
         for (int i = 0; i < NUM_OF_DIMENSIONS; ++i) {
-            subtree[i]->getCenter(center, mass);
+            subtree[i]->updateCenter();
+            Particle& subCenter = subtree[i]->center;
+            cpos += subCenter.getPosition() * subCenter.mass;
+            mass += subCenter.mass;
         }
     }
+    if (mass > 0) {
+        cpos /= mass;
+    }
+    center = Particle(cpos.x, cpos.y, cpos.z, mass);
 }
