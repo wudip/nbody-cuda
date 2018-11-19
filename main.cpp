@@ -83,21 +83,24 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 
 void nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     int size = (int) particles->size();
-    Particle* arr = (Particle*) acc_malloc(sizeof(Particle) * size);
-    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-        arr[pit - particles->begin()] = *pit;
+//    Particle* arr = (Particle*) acc_malloc(sizeof(Particle) * size);
+    Particle * arr = new Particle[size];
+    for (int i = 0; i < size; ++i) {
+        arr[i] = particles->at(i);
     }
-    #pragma acc parallel loop
+    #pragma acc parallel loop copy(arr[0:size])
     for (int index = 0; index < size; ++index) {
-        Vec3<double> force = arr[index].cell->getForce();
-        Vec3<double> acceleration = force / arr[index].mass;
+//        Vec3<double> force = arr[index].cell->getForce();
+//        Vec3<double> acceleration = force / arr[index].mass;
+        Vec3<double> acceleration(5, 5, 5);
         arr[index].accelerate(acceleration);
         arr[index].updatePosition();
     }
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         *pit = arr[pit - particles->begin()];
     }
-    acc_free(arr);
+    delete[] arr;
+//    acc_free(arr);
 }
 
 void moveParticles(vector<Particle> * particles, const Vec3<double>* forces) {
