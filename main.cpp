@@ -17,7 +17,7 @@ vector<Particle> * loadParticles(istream& input);
 vector<Vec3<double>> nbody(const vector<Particle> * particles);
 void moveParticles(vector<Particle> * particles, const Vec3<double>* forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
-Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell);
+void nbodyBarnesHut(vector<Particle> * particles, Cell & cell);
 double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
@@ -40,9 +40,9 @@ int main(int argc, char** argv) {
         octree.add(&*it);
     }
     octree.updateCenter();
-    Vec3<double>* forces = nbodyBarnesHut(particles, octree);
+    nbodyBarnesHut(particles, octree);
     //vector<Vec3<double>> forces = nbody(particles);
-    moveParticles(particles, forces);
+    // moveParticles(particles, forces);
     delete forces;
   }
   clock_t clk_end = clock();
@@ -81,10 +81,9 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
-Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
+void nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     int size = (int) particles->size();
-    Vec3<double> * forces = new Vec3<double>[size];
-    Particle* arr = new Particle[size];
+    Particle* arr = acc_malloc(sizeof(Particle) * size);
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         arr[pit - particles->begin()] = *pit;
     }
@@ -98,7 +97,7 @@ Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         *pit = arr[pit - particles->begin()];
     }
-    return forces;
+    acc_free(arr)
 }
 
 void moveParticles(vector<Particle> * particles, const Vec3<double>* forces) {
