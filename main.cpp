@@ -2,12 +2,14 @@
 #include <vector>
 #include <cmath>
 #include <ctime>
+#include <fstream>
 
 #include "cell.cpp"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
 #define GRAVITATION_CONSTANT 6.67300E-11
+#define WINDOWS_SUCKS 1
 
 using namespace std;
 
@@ -19,7 +21,16 @@ vector<Vec3<double>> nbodyBarnesHut(Cell & cell);
 double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
-  vector<Particle> * particles = loadParticles(cin);
+  vector<Particle> * particles;
+  if (WINDOWS_SUCKS && argc > 1) {
+      std::ifstream ifs;
+      ifs.open(argv[1], ifstream::in);
+      particles = loadParticles(ifs);
+      ifs.close();
+  }
+  else {
+      particles = loadParticles(cin);
+  }
   clock_t clk_start = clock();
   for(int i = 0; i < 1000; ++i) {
     double * particleBoundaries = computeParticleBoundaries(particles);
