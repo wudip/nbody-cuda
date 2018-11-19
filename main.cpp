@@ -17,7 +17,7 @@ vector<Particle> * loadParticles(istream& input);
 vector<Vec3<double>> nbody(const vector<Particle> * particles);
 void moveParticles(vector<Particle> * particles, const Vec3<double>* forces);
 void printParticles(const vector<Particle> * particles, ostream& out);
-Vec3<double>* nbodyBarnesHut(const vector<Particle> * particles, Cell & cell);
+Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell);
 double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
     Vec3<double>* forces = nbodyBarnesHut(particles, octree);
     //vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
+    delete forces;
   }
   clock_t clk_end = clock();
   cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
@@ -80,13 +81,22 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
-Vec3<double>* nbodyBarnesHut(const vector<Particle> * particles, Cell & cell) {
-    Vec3<double> * forces = new Vec3<double>[particles->size()];
+Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
+    int size = (int) particles->size();
+    Vec3<double> * forces = new Vec3<double>[size];
+    Particle* arr = new Particle[size];
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+        arr[pit - particles->begin()] = *pit;
+    }
     #pragma acc parallel loop
-    for (auto partit = particles->begin(); partit < particles->end(); ++partit) {
-        Vec3<double> f = partit->cell->getForce();
-        int index = (int)(partit - particles->begin());
-        forces[index] = f;
+    for (int index = 0; index < size; ++index) {
+        Vec3<double> force = arr[index].cell->getForce();
+        Vec3<double> acceleration = force / arr[index].mass;
+        arr[index].accelerate(acceleration);
+        arr[index].updatePosition();
+    }
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+        *pit = arr[pit - particles->begin()];
     }
     return forces;
 }
