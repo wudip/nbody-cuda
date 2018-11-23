@@ -1,69 +1,14 @@
 #include <iostream>
 #include <cmath>
 
-#include "particle.cpp"
-
-#define NUM_OF_SUBCELLS 8
-#define NUM_OF_DIMENSIONS 3
+#include "vec3.h"
+#include "particle.h"
+#include "cell.h"
 
 #define SOFTENING_FACTOR_SQR 0.5
 #define GRAVITATION_CONSTANT 6.67300E-11
 
 using namespace std;
-
-void addToForces(Vec3<double>& forces, Particle* particle, Particle& sibPart) {
-    Vec3<double> diff = particle->getPosition() - sibPart.getPosition();
-    double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
-    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart.mass;
-    forces += diff * massTotal / bottom;
-}
-
-/**
- * Octree cell
- */
-class Cell {
-    Particle * part;
-    Particle center;
-    Cell * parent;
-    Cell * subtree[NUM_OF_SUBCELLS];
-    Vec3<double> minPoint;
-    Vec3<double> maxPoint;
-    /**
-     * Splits the cell into 2^{@link #NUM_OF_DIMENSIONS} cells. They are stored in {@link #subtree} variable.
-     */
-    void split();
-    void printCell(ostream & ost, int & id) const;
-    void getForceSiblings(const Cell * c, Vec3<double>& forces) const {
-        if (parent) {
-            for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
-                Cell * sibling = parent->subtree[i];
-                if (sibling == this) continue;
-                Particle& sibPart = sibling->center;
-                Particle* particle = c->part;
-                addToForces(forces, particle, sibPart);
-            }
-        }
-    }
-
-public:
-    Cell() = delete;
-    Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS]);
-    Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS], Cell * daddy);
-    ~Cell();
-    void add(Particle *);
-    Cell * getSubcell(Particle * particle);
-    void printGraph(ostream & ost) const;
-    void updateCenter();
-    Vec3<double> getForce() const {
-        Vec3<double> potato(0, 0, 0);
-        const Cell * c = this;
-        while (c->parent) {
-            getForceSiblings(c, potato);
-            c = c->parent;
-        }
-        return potato;
-    }
-};
 
 Cell::Cell(const double *boundMin, const double *boundMax, Cell * daddy):
     part(nullptr), parent(daddy), subtree{nullptr, nullptr, nullptr}
@@ -182,4 +127,33 @@ void Cell::updateCenter() {
         cpos /= mass;
     }
     center = Particle(cpos.x, cpos.y, cpos.z, mass);
+}
+
+void Cell::getForceSiblings(const Cell * c, Vec3<double>& forces) const {
+    if (parent) {
+        for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
+            Cell * sibling = parent->subtree[i];
+            if (sibling == this) continue;
+            Particle& sibPart = sibling->center;
+            Particle* particle = c->part;
+            addToForces(forces, particle, sibPart);
+        }
+    }
+}
+
+Vec3<double> Cell::getForce() const {
+    Vec3<double> potato(0, 0, 0);
+    const Cell * c = this;
+    while (c->parent) {
+        getForceSiblings(c, potato);
+        c = c->parent;
+    }
+    return potato;
+}
+
+void addToForces(Vec3<double>& forces, Particle* particle, Particle& sibPart) {
+    Vec3<double> diff = particle->getPosition() - sibPart.getPosition();
+    double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
+    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart.mass;
+    forces += diff * massTotal / bottom;
 }

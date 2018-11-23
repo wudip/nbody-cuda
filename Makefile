@@ -3,8 +3,17 @@ CFLAG=-g -Wall -std=c++11
 
 all: nbody generator
 
-nbody:
-	$(CC) $(CFLAG) main.cpp -o nbody
+nbody: main.cpp cell.cpp cell.o particle.o vec3.o
+	$(CC) $(CFLAG) main.cpp cell.o particle.o vec3.o -o nbody
+
+cell.o: cell.cpp cell.h particle.o vec3.o
+	$(CC) $(CFLAG) cell.cpp particle.o vec3.o -c -o cell.o
+
+particle.o: particle.cpp particle.h vec3.o
+	$(CC) $(CFLAG) particle.cpp vec3.o -c -o particle.o
+
+vec3.o: vec3.cpp vec3.h
+	$(CC) $(CFLAG) vec3.cpp -c -o vec3.o
 
 generator:
 	$(CC) $(CFLAG) generator.cpp -o generator

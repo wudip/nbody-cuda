@@ -4,7 +4,10 @@
 #include <ctime>
 #include <fstream>
 
-#include "cell.cpp"
+#include "main.h"
+#include "vec3.h"
+#include "particle.h"
+#include "cell.h"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
@@ -12,13 +15,6 @@
 #define WINDOWS_SUCKS 1
 
 using namespace std;
-
-vector<Particle> * loadParticles(istream& input);
-vector<Vec3<double>> nbody(const vector<Particle> * particles);
-void moveParticles(vector<Particle> * particles, const Vec3<double>* forces);
-void printParticles(const vector<Particle> * particles, ostream& out);
-Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell);
-double * computeParticleBoundaries(const vector<Particle> * particles);
 
 int main(int argc, char** argv) {
   vector<Particle> * particles;
@@ -88,7 +84,6 @@ Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         arr[pit - particles->begin()] = *pit;
     }
-    #pragma acc parallel loop
     for (int index = 0; index < size; ++index) {
         Vec3<double> force = arr[index].cell->getForce();
         Vec3<double> acceleration = force / arr[index].mass;
