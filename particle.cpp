@@ -3,15 +3,15 @@
 class Cell;
 
 Particle::Particle():
-    position(Vec3<double>()), velocity(Vec3<double>()), mass(0)
+    position(Vec3<double>()), velocity(Vec3<double>()), mass(0), cellIndex((unsigned int) -1)
 {};
 
 Particle::Particle(double x, double y, double z, double mass):
-    position(Vec3<double>(x, y, z)), velocity(Vec3<double>(0, 0, 0)), mass(mass)
+    position(Vec3<double>(x, y, z)), velocity(Vec3<double>(0, 0, 0)), mass(mass), cellIndex((unsigned int) -1)
 {};
 
 Particle::Particle(Vec3<double> position, double mass):
-    position(position), velocity(Vec3<double>(0, 0, 0)), mass(mass)
+    position(position), velocity(Vec3<double>(0, 0, 0)), mass(mass), cellIndex((unsigned int) -1)
 {};
 
 const Vec3<double>& Particle::getPosition() const {

@@ -1,14 +1,11 @@
 #include <iostream>
 #include <cmath>
 
-#include "vec3.h"
-#include "particle.h"
 #include "cell.h"
 
-#define SOFTENING_FACTOR_SQR 0.5
-#define GRAVITATION_CONSTANT 6.67300E-11
-
 using namespace std;
+
+Cell::Cell() {}
 
 Cell::Cell(const double *boundMin, const double *boundMax, Cell * daddy):
     part(nullptr), parent(daddy), subtree{nullptr, nullptr, nullptr}
@@ -24,12 +21,33 @@ Cell::Cell(const double *boundMin, const double *boundMax):
 {
 }
 
+Cell::Cell(const Cell & buddy):
+    part(buddy.part), center(buddy.center), parent(buddy.parent), minPoint(buddy.minPoint), maxPoint(buddy.maxPoint)
+{
+    for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
+        subtree[i] = buddy.subtree[i];
+    }
+}
+
 Cell::~Cell() {
     if (subtree[0]) {
         for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
             delete subtree[i];
         }
     }
+}
+
+Cell& Cell::operator=(const Cell& buddy)       {
+    part = buddy.part;
+    center = buddy.center;
+    parent = buddy.parent;
+    for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
+        subtree[i] = buddy.subtree[i];
+    }
+    minPoint = buddy.minPoint;
+    maxPoint = buddy.maxPoint;
+    return *this;
+
 }
 
 void Cell::add(Particle * particle) {
@@ -129,31 +147,31 @@ void Cell::updateCenter() {
     center = Particle(cpos.x, cpos.y, cpos.z, mass);
 }
 
-void Cell::getForceSiblings(const Cell * c, Vec3<double>& forces) const {
-    if (parent) {
+unsigned int Cell::getNumOfNodes() const {
+    unsigned int numOfCells = 1;
+    if (subtree[0]) {
         for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
-            Cell * sibling = parent->subtree[i];
-            if (sibling == this) continue;
-            Particle& sibPart = sibling->center;
-            Particle* particle = c->part;
-            addToForces(forces, particle, sibPart);
+            numOfCells += subtree[i]->getNumOfNodes();
         }
     }
+    return numOfCells;
 }
 
-Vec3<double> Cell::getForce() const {
-    Vec3<double> potato(0, 0, 0);
-    const Cell * c = this;
-    while (c->parent) {
-        getForceSiblings(c, potato);
-        c = c->parent;
+Cell* Cell::serialize() const {
+    Cell * cells = new Cell[getNumOfNodes()];
+    unsigned int index = 0;
+    serialize(cells, index);
+    //cout << getNumOfNodes() << " nodes, " << index << " filled" << endl;
+    return cells;
+}
+
+void SimpleCell::serialize(SimpleCell* cellList, unsigned int &index) const {
+    cellList[index] = SimpleCell();
+    if (part) part->cellIndex = index;
+    index++;
+    if (subtree[0]) {
+        for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
+            subtree[i]->serialize(cellList, index);
+        }
     }
-    return potato;
-}
-
-void addToForces(Vec3<double>& forces, Particle* particle, Particle& sibPart) {
-    Vec3<double> diff = particle->getPosition() - sibPart.getPosition();
-    double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
-    double massTotal = GRAVITATION_CONSTANT * particle->mass * sibPart.mass;
-    forces += diff * massTotal / bottom;
 }

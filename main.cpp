@@ -8,6 +8,7 @@
 #include "vec3.h"
 #include "particle.h"
 #include "cell.h"
+#include "simple_cell.h"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
@@ -28,7 +29,8 @@ int main(int argc, char** argv) {
       particles = loadParticles(cin);
   }
   clock_t clk_start = clock();
-  for(int i = 0; i < 1000; ++i) {
+  for(int i = 0; i < 1; ++i) {
+    // Create octree
     double * particleBoundaries = computeParticleBoundaries(particles);
     Cell octree(particleBoundaries, particleBoundaries + 3);
     delete[] particleBoundaries;
@@ -36,7 +38,23 @@ int main(int argc, char** argv) {
         octree.add(&*it);
     }
     octree.updateCenter();
-    Vec3<double>* forces = nbodyBarnesHut(particles, octree);
+
+    // create forces array
+    int size = (int) particles->size();
+    // move particles from vector to array
+    Particle* particleArr = new Particle[size];
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+        particleArr[pit - particles->begin()] = *pit;
+    }
+
+    Vec3<double>* forces = nbodyBarnesHut(particleArr, size, octree);
+
+    // delete new particles
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+      *pit = particleArr[pit - particles->begin()];
+    }
+    delete[] particleArr;
+
     //vector<Vec3<double>> forces = nbody(particles);
     moveParticles(particles, forces);
     delete forces;
@@ -77,22 +95,19 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
   return forces;
 }
 
-Vec3<double>* nbodyBarnesHut(vector<Particle> * particles, Cell & cell) {
-    int size = (int) particles->size();
-    Vec3<double> * forces = new Vec3<double>[size];
-    Particle* arr = new Particle[size];
-    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-        arr[pit - particles->begin()] = *pit;
+Vec3<double>* nbodyBarnesHut(Particle * particles, unsigned int nOfParticles, Cell & cell) {
+    Vec3<double> * forces = new Vec3<double>[nOfParticles];
+    SimpleCell* flatTree = cell.serialize();
+    for (int index = 0; index < nOfParticles; ++index) {
+        SimpleCell* particleCell = flatTree + particles[index].cellIndex;
+        Vec3<double> force = particleCell->getForce(particles);
+        // forces[index] = force;
+        forces[index] = Vec3<double>(0, 0, 0);
+        Vec3<double> acceleration = force / particles[index].mass;
+        particles[index].accelerate(acceleration);
+        particles[index].updatePosition();
     }
-    for (int index = 0; index < size; ++index) {
-        Vec3<double> force = arr[index].cell->getForce();
-        Vec3<double> acceleration = force / arr[index].mass;
-        arr[index].accelerate(acceleration);
-        arr[index].updatePosition();
-    }
-    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-        *pit = arr[pit - particles->begin()];
-    }
+    delete[] flatTree;
     return forces;
 }
 

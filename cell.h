@@ -5,6 +5,7 @@
 
 #include "vec3.h"
 #include "particle.h"
+#include "simple_cell.h"
 
 #define NUM_OF_SUBCELLS 8
 #define NUM_OF_DIMENSIONS 3
@@ -24,20 +25,27 @@ class Cell {
      */
     void split();
     void printCell(std::ostream & ost, int & id) const;
-    void getForceSiblings(const Cell * c, Vec3<double>& forces) const;
+    void serialize(SimpleCell* cellList, unsigned int& index) const;
 
 public:
-    Cell() = delete;
+    Cell();
     Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS]);
     Cell(const double boundMin[NUM_OF_DIMENSIONS], const double boundMax[NUM_OF_DIMENSIONS], Cell * daddy);
+    Cell(const Cell& buddy);
     ~Cell();
+    Cell& operator=(const Cell& buddy);
     void add(Particle *);
     Cell * getSubcell(Particle * particle);
     void printGraph(std::ostream & ost) const;
     void updateCenter();
-    Vec3<double> getForce() const;
+    /**
+     * @return number of cells in subtree (including this one)
+     */
+    unsigned int getNumOfNodes() const;
+    /**
+     * Creates new array of all cells in subtree
+     */
+    SimpleCell* serialize() const;
 };
-
-void addToForces(Vec3<double>& forces, Particle* particle, Particle& sibPart);
 
 #endif //BAKAJ_WUDI_CUDA_CELL_H

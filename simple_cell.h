@@ -1,6 +1,9 @@
 #ifndef BAKAJ_WUDI_CUDA_SIMPLE_CELL_H
 #define BAKAJ_WUDI_CUDA_SIMPLE_CELL_H
 
+#include "vec3.h"
+#include "particle.h"
+
 /**
  * Simplified cell used in particle position computation
  * It contains no pointer whatsoever so it could be used easily on GPU
@@ -13,6 +16,12 @@
 #define NUM_OF_DIMENSIONS 3
 
 class SimpleCell {
+protected:
+    /**
+     * Position of this particle in the cell array
+     */
+    unsigned int offset;
+
     /**
      * Position of particle in particle array (or {@code (unsigned int) -1} if it contains no particle)
      */
@@ -33,6 +42,17 @@ class SimpleCell {
      */
     unsigned int subtree[NUM_OF_SUBCELLS];
 
+    SimpleCell();
+
+    SimpleCell(unsigned int offset, unsigned int particle, const Particle& center, unsigned int parent, unsigned int* sub);
+
+    const SimpleCell* getCell(unsigned int position) const;
+
+    void getForceSiblings(const Particle& refParticle, Vec3<double>& forces) const;
+public:
+    Vec3<double> getForce(const Particle * particles) const;
 };
+
+void addToForces(Vec3<double>& forces, const Particle& particle, const Particle& sibPart);
 
 #endif //BAKAJ_WUDI_CUDA_SIMPLE_CELL_H
