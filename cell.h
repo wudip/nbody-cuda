@@ -25,7 +25,7 @@ class Cell {
      */
     void split();
     void printCell(std::ostream & ost, int & id) const;
-    void serialize(SimpleCell* cellList, unsigned int& index) const;
+    void serialize(SimpleCell* cellList, const Particle * partBeginning, unsigned int& index, unsigned int daddy) const;
 
 public:
     Cell();
@@ -44,8 +44,9 @@ public:
     unsigned int getNumOfNodes() const;
     /**
      * Creates new array of all cells in subtree
+     * @param partBeginning beginning of array of particles (necessary to get position of the particle)
      */
-    SimpleCell* serialize() const;
+    SimpleCell* serialize(const Particle * partBeginning) const;
 };
 
 #endif //BAKAJ_WUDI_CUDA_CELL_H

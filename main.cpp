@@ -29,23 +29,24 @@ int main(int argc, char** argv) {
       particles = loadParticles(cin);
   }
   clock_t clk_start = clock();
-  for(int i = 0; i < 1; ++i) {
+  for(int i = 0; i < 1000; ++i) {
     // Create octree
     double * particleBoundaries = computeParticleBoundaries(particles);
-    Cell octree(particleBoundaries, particleBoundaries + 3);
-    delete[] particleBoundaries;
-    for(auto it = particles->begin(); it < particles->end(); ++it) {
-        octree.add(&*it);
-    }
-    octree.updateCenter();
 
-    // create forces array
-    int size = (int) particles->size();
     // move particles from vector to array
+    unsigned int size = (unsigned int) particles->size();
     Particle* particleArr = new Particle[size];
     for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
         particleArr[pit - particles->begin()] = *pit;
     }
+
+    Cell octree(particleBoundaries, particleBoundaries + 3);
+    delete[] particleBoundaries;
+    for(unsigned int partIndex = 0; partIndex < size; ++partIndex) {
+        octree.add(particleArr + partIndex);
+    }
+    octree.updateCenter();
+
 
     Vec3<double>* forces = nbodyBarnesHut(particleArr, size, octree);
 
@@ -97,8 +98,8 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 
 Vec3<double>* nbodyBarnesHut(Particle * particles, unsigned int nOfParticles, Cell & cell) {
     Vec3<double> * forces = new Vec3<double>[nOfParticles];
-    SimpleCell* flatTree = cell.serialize();
-    for (int index = 0; index < nOfParticles; ++index) {
+    SimpleCell* flatTree = cell.serialize(particles);
+    for (unsigned int index = 0; index < nOfParticles; ++index) {
         SimpleCell* particleCell = flatTree + particles[index].cellIndex;
         Vec3<double> force = particleCell->getForce(particles);
         // forces[index] = force;

@@ -157,21 +157,26 @@ unsigned int Cell::getNumOfNodes() const {
     return numOfCells;
 }
 
-Cell* Cell::serialize() const {
-    Cell * cells = new Cell[getNumOfNodes()];
+SimpleCell* Cell::serialize(const Particle * partBeginning) const {
+    SimpleCell * cells = new SimpleCell[getNumOfNodes()];
     unsigned int index = 0;
-    serialize(cells, index);
-    //cout << getNumOfNodes() << " nodes, " << index << " filled" << endl;
+    serialize(cells, partBeginning, index, (unsigned int) -1);
     return cells;
 }
 
-void SimpleCell::serialize(SimpleCell* cellList, unsigned int &index) const {
-    cellList[index] = SimpleCell();
-    if (part) part->cellIndex = index;
-    index++;
+void Cell::serialize(SimpleCell* cellList, const Particle * partBeginning, unsigned int &index, unsigned int daddy) const {
+    unsigned int myIndex = index++;
+    unsigned int subIndexes[NUM_OF_SUBCELLS] = {0};
     if (subtree[0]) {
         for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
-            subtree[i]->serialize(cellList, index);
+            subIndexes[i] = index;
+            subtree[i]->serialize(cellList, partBeginning, index, myIndex);
         }
     }
+    unsigned int particleIndex = (unsigned int) -1;
+    if (part) {
+        part->cellIndex = myIndex;
+        particleIndex = (unsigned int) (part - partBeginning);
+    }
+    cellList[myIndex] = SimpleCell(myIndex, particleIndex, center, daddy, subIndexes);
 }

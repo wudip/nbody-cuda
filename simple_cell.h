@@ -42,14 +42,14 @@ protected:
      */
     unsigned int subtree[NUM_OF_SUBCELLS];
 
-    SimpleCell();
-
-    SimpleCell(unsigned int offset, unsigned int particle, const Particle& center, unsigned int parent, unsigned int* sub);
-
     const SimpleCell* getCell(unsigned int position) const;
 
     void getForceSiblings(const Particle& refParticle, Vec3<double>& forces) const;
 public:
+    SimpleCell();
+
+    SimpleCell(unsigned int offset, unsigned int particle, const Particle& center, unsigned int parent, unsigned int* sub);
+
     Vec3<double> getForce(const Particle * particles) const;
 };
 

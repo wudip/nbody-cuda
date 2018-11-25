@@ -4,7 +4,7 @@
 #define SOFTENING_FACTOR_SQR 0.5
 #define GRAVITATION_CONSTANT 6.67300E-11
 
-#define IS_NOT_EMPTY(index) ((unsigned int) -1) != index // TODO: move to impl file
+#define IS_NOT_EMPTY(index) ((unsigned int) -1) != index
 
 SimpleCell::SimpleCell(){}
 
@@ -17,7 +17,7 @@ SimpleCell::SimpleCell(unsigned int offset, unsigned int particle, const Particl
 }
 
 const SimpleCell* SimpleCell::getCell(unsigned int position) const {
-    unsigned int diff = position - offset;
+    int diff = position - offset;
     return this + diff;
 }
 
