@@ -157,26 +157,27 @@ unsigned int Cell::getNumOfNodes() const {
     return numOfCells;
 }
 
-SimpleCell* Cell::serialize(const Particle * partBeginning) const {
-    SimpleCell * cells = new SimpleCell[getNumOfNodes()];
+pair<SimpleCell *, unsigned int *> Cell::serialize(const Particle * partBeginning) const {
+    SimpleCell* cells = new SimpleCell[getNumOfNodes()];
+    unsigned int* partMapping = new unsigned int[getNumOfNodes()];
     unsigned int index = 0;
-    serialize(cells, partBeginning, index, (unsigned int) -1);
-    return cells;
+    serialize(cells, partMapping, partBeginning, index, (unsigned int) -1);
+    return {cells, partMapping};
 }
 
-void Cell::serialize(SimpleCell* cellList, const Particle * partBeginning, unsigned int &index, unsigned int daddy) const {
+void Cell::serialize(SimpleCell* cellList, unsigned int * partMapping, const Particle * partBeginning, unsigned int &index, unsigned int daddy) const {
     unsigned int myIndex = index++;
     unsigned int subIndexes[NUM_OF_SUBCELLS] = {0};
     if (subtree[0]) {
         for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
             subIndexes[i] = index;
-            subtree[i]->serialize(cellList, partBeginning, index, myIndex);
+            subtree[i]->serialize(cellList, partMapping, partBeginning, index, myIndex);
         }
     }
     unsigned int particleIndex = (unsigned int) -1;
     if (part) {
-        part->cellIndex = myIndex;
         particleIndex = (unsigned int) (part - partBeginning);
+        partMapping[particleIndex] = myIndex;
     }
     cellList[myIndex] = SimpleCell(myIndex, particleIndex, center, daddy, subIndexes);
 }

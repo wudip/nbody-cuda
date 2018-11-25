@@ -98,17 +98,20 @@ vector<Vec3<double>> nbody(const vector<Particle> * particles) {
 
 Vec3<double>* nbodyBarnesHut(Particle * particles, unsigned int nOfParticles, Cell & cell) {
     Vec3<double> * forces = new Vec3<double>[nOfParticles];
-    SimpleCell* flatTree = cell.serialize(particles);
+    pair<SimpleCell*, unsigned int*> serialized = cell.serialize(particles);
+    SimpleCell* flatTree = serialized.first;
+    unsigned int* partPositions = serialized.second;
     for (unsigned int index = 0; index < nOfParticles; ++index) {
-        SimpleCell* particleCell = flatTree + particles[index].cellIndex;
+        SimpleCell* particleCell = flatTree + partPositions[index];
         Vec3<double> force = particleCell->getForce(particles);
-        // forces[index] = force;
-        forces[index] = Vec3<double>(0, 0, 0);
-        Vec3<double> acceleration = force / particles[index].mass;
-        particles[index].accelerate(acceleration);
-        particles[index].updatePosition();
+        forces[index] = force;
+//        forces[index] = Vec3<double>(0, 0, 0);
+//        Vec3<double> acceleration = force / particles[index].mass;
+//        particles[index].accelerate(acceleration);
+//        particles[index].updatePosition();
     }
     delete[] flatTree;
+    delete[] partPositions;
     return forces;
 }
 
@@ -137,7 +140,7 @@ double * computeParticleBoundaries(const vector<Particle> * particles) {
     for (auto it = particles->begin(); it < particles->end(); ++it) {
         Vec3<double> pos = it->getPosition();
         for (int dim = 0; dim < 3; ++dim) {
-            int coord = pos.getDim(dim);
+            double coord = pos.getDim(dim);
             if (coord < result[dim]) {
                 result[dim] = coord;
             }

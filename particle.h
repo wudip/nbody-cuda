@@ -11,7 +11,6 @@ private:
     Vec3<double> velocity;
 public:
     double mass;
-    unsigned int cellIndex;
     Cell * cell;
     Particle();
     Particle(double x, double y, double z, double mass);

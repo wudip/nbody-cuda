@@ -30,7 +30,7 @@ protected:
     /**
      * Center of mass of the cell
      */
-    Particle center; // TODO: maybe unnecessary velocity and cellIndex
+    Particle center; // TODO: maybe unnecessary velocity
 
     /**
      * Position of parent in the cell array (or {@code (unsigned int) -1} if no parent is present)
