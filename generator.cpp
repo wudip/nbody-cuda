@@ -1,16 +1,16 @@
 #include <iostream>
-#include <cstring>
 #include <random>
 
 #define NUMBER_OF_DIMENSIONS 3
 
-using  namespace std;
+using namespace std;
 
 struct arguments {
     arguments() {
         containsError = false;
         shouldContinue = true;
     }
+
     double positionVariance;
     double massAvg;
     double massVariance;
@@ -19,8 +19,8 @@ struct arguments {
     bool shouldContinue;
 };
 
-arguments* readArguments(int argc, char** argv) {
-    arguments * a = new arguments();
+arguments *readArguments(int argc, char **argv) {
+    arguments *a = new arguments();
     a->particleSum = 5; // TODO
     a->positionVariance = 0.3; // TODO
     a->massAvg = 5; // TODO
@@ -29,11 +29,10 @@ arguments* readArguments(int argc, char** argv) {
 }
 
 void generateParticle(
-        normal_distribution<double> & positionDistribution,
-        normal_distribution<double> & massDistribution,
-        default_random_engine & randomGenerator
-        )
-{
+        normal_distribution<double> &positionDistribution,
+        normal_distribution<double> &massDistribution,
+        default_random_engine &randomGenerator
+) {
     for (int dimension = 0; dimension < NUMBER_OF_DIMENSIONS; ++dimension) {
         double coord = positionDistribution(randomGenerator);
         cout << coord << " ";
@@ -42,8 +41,8 @@ void generateParticle(
     cout << mass << endl;
 }
 
-int main(int argc, char** argv) {
-    arguments * a = readArguments(argc, argv);
+int main(int argc, char **argv) {
+    arguments *a = readArguments(argc, argv);
     if (a->containsError) {
         return 1;
     }

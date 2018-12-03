@@ -11,13 +11,17 @@ private:
     Vec3<double> velocity;
 public:
     double mass;
-    Cell * cell;
-    Particle();
-    Particle(double x, double y, double z, double mass);
-    Particle(Vec3<double> position, double mass);
-    Particle& operator=(const Particle & p) = default;
+    Cell *cell;
 
-    const Vec3<double>& getPosition() const;
+    Particle();
+
+    Particle(double x, double y, double z, double mass);
+
+    Particle(Vec3<double> position, double mass);
+
+    Particle &operator=(const Particle &p) = default;
+
+    const Vec3<double> &getPosition() const;
 
     /**
      * Updates position of the particle according to its velocity
@@ -26,7 +30,7 @@ public:
 
     void accelerate(Vec3<double> acceleration);
 
-    friend std::ostream& operator<<( std::ostream &o, const Particle &particle);
+    friend std::ostream &operator<<(std::ostream &o, const Particle &particle);
 };
 
 
