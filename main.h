@@ -13,7 +13,7 @@ std::vector<Vec3<double>> nbody(const std::vector<Particle> *particles);
 
 void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell);
 
-__global__ void moveParticles(Particle *particles, const Vec3<double> *forces);
+__global__ void moveParticles(Particle *particles, const Vec3<double> *forces, unsigned int nOfParticles);
 
 void printParticles(const std::vector<Particle> *particles, std::ostream &out);
 
