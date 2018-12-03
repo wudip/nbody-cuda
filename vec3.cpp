@@ -96,6 +96,11 @@ void Vec3<T>::operator*=(const T &value) {
     z *= value;
 }
 
+// template<typename T>
+// Vec3<T> Vec3<T>::operator/(const T &value) const {
+//     return Vec3<T>(x / value, y / value, z / value);
+// }
+
 template<typename T>
 Vec3<T> Vec3<T>::operator/(const T &value) const {
     return Vec3<T>(x / value, y / value, z / value);

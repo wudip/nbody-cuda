@@ -21,7 +21,7 @@ struct arguments {
 
 arguments *readArguments(int argc, char **argv) {
     arguments *a = new arguments();
-    a->particleSum = 5; // TODO
+    a->particleSum = 20; // TODO
     a->positionVariance = 0.3; // TODO
     a->massAvg = 5; // TODO
     a->massVariance = 6; // TODO

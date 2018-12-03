@@ -1,8 +1,10 @@
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <utility>
 
 #include "main.h"
 #include "cell.h"
@@ -11,68 +13,66 @@
 #define SOFTENING_FACTOR_SQR 0.5
 #define GRAVITATION_CONSTANT 6.67300E-11
 #define WINDOWS_SUCKS 1
+#define NUM_REPEATS 5
 
 using namespace std;
 
 int main(int argc, char **argv) {
-    vector<Particle> *particles;
+    // Load input
+    pair<Particle*, unsigned int> input;
     if (WINDOWS_SUCKS && argc > 1) {
         std::ifstream ifs;
         ifs.open(argv[1], ifstream::in);
-        particles = loadParticles(ifs);
+        input = loadParticles(ifs);
         ifs.close();
     } else {
-        particles = loadParticles(cin);
+        input = loadParticles(cin);
     }
+    Particle* particles = input.first;
+    unsigned int size = input.second;
+    if (particles == nullptr) return 1;
+
+    // Actual algorithm
     clock_t clk_start = clock();
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < NUM_REPEATS; ++i) {
         // Create octree
-        double *particleBoundaries = computeParticleBoundaries(particles);
-
-        // move particles from vector to array
-        unsigned int size = (unsigned int) particles->size();
-        Particle *particleArr = new Particle[size];
-        for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-            particleArr[pit - particles->begin()] = *pit;
-        }
-
+        double *particleBoundaries = computeParticleBoundaries(particles, size);
         Cell octree(particleBoundaries, particleBoundaries + 3);
         delete[] particleBoundaries;
         for (unsigned int partIndex = 0; partIndex < size; ++partIndex) {
-            octree.add(particleArr + partIndex);
+            octree.add(particles + partIndex);
         }
         octree.updateCenter();
-
-
-        Vec3<double> *forces = nbodyBarnesHut(particleArr, size, octree);
-
-        // delete new particles
-        for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-            *pit = particleArr[pit - particles->begin()];
-        }
-        delete[] particleArr;
-
-        //vector<Vec3<double>> forces = nbody(particles);
-        moveParticles(particles, forces);
-        delete forces;
+        // Solve N-body problem
+        nbodyBarnesHut(particles, size, octree);
     }
     clock_t clk_end = clock();
-    cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
-    printParticles(particles, cout);
-    delete particles;
+    printParticles(particles, size, cout);
+    delete[] particles;
+    long time = (clk_end - clk_start) / (CLOCKS_PER_SEC / 1000);
+    cout << "Time: " << time << " ms" << endl;
     return 0;
 }
 
-vector<Particle> *loadParticles(istream &input) {
-    vector<Particle> *particles = new vector<Particle>();
+pair<Particle *, unsigned int> loadParticles(istream &input) {
+    // Loading vector
+    vector<Particle> particles;
     double x;
     double y;
     double z;
     double mass;
     while (input >> x && input >> y && input >> z && input >> mass) {
-        particles->push_back(Particle(x, y, z, mass));
+        particles.push_back(Particle(x, y, z, mass));
     }
-    return particles;
+
+    // Move particles from vector to array
+    unsigned int size = (unsigned int) particles.size();
+    Particle* particleArr = size == 0 ? nullptr : new Particle[size];
+    for (auto pit = particles.begin(); pit < particles.end(); ++pit) {
+        particleArr[pit - particles.begin()] = * pit;
+    }
+
+    return {particleArr, size};
 }
 
 vector<Vec3<double>> nbody(const vector<Particle> *particles) {
@@ -92,29 +92,29 @@ vector<Vec3<double>> nbody(const vector<Particle> *particles) {
     return forces;
 }
 
-Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
-    Vec3<double> *forces = new Vec3<double>[nOfParticles];
-    pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles);
+void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
+    unsigned int nOfCells;
+    pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles, nOfCells);
     SimpleCell *flatTree = serialized.first;
     unsigned int *partPositions = serialized.second;
-    for (unsigned int index = 0; index < nOfParticles; ++index) {
+    Vec3<double>* forces = new Vec3<double>[nOfParticles];
+
+    for(unsigned int index = 0; index < nOfParticles; ++index) {
         SimpleCell *particleCell = flatTree + partPositions[index];
-        Vec3<double> force = particleCell->getForce(particles);
-        forces[index] = force;
-//        forces[index] = Vec3<double>(0, 0, 0);
-//        Vec3<double> acceleration = force / particles[index].mass;
-//        particles[index].accelerate(acceleration);
-//        particles[index].updatePosition();
+        Vec3<double> force = particleCell->getForce(particles) * 10000;
+        Vec3<double> acceleration = force / particles[index].mass;
+        forces[index] = acceleration;
     }
+    moveParticles(particles, forces, nOfParticles);
+
     delete[] flatTree;
     delete[] partPositions;
-    return forces;
 }
 
-void moveParticles(vector<Particle> *particles, const Vec3<double> *forces) {
-    auto particleIt = particles->begin();
+void moveParticles(Particle *particles, const Vec3<double> *forces, unsigned int n) {
+    auto particleIt = particles;
     auto forceIt = forces;
-    while (particleIt < particles->end()) {
+    for(unsigned int i = 0; i < n; i++) {
         Vec3<double> acceleration = *forceIt / particleIt->mass;
         particleIt->accelerate(acceleration);
         particleIt->updatePosition();
@@ -127,13 +127,13 @@ void moveParticles(vector<Particle> *particles, const Vec3<double> *forces) {
  * Computes coordinates of smallest possible box containing all the particles
  * @return array of minimum point and maximum point: [min_x, min_y, min_z, max_x, max_y, max_z]
  */
-double *computeParticleBoundaries(const vector<Particle> *particles) {
+double *computeParticleBoundaries(const Particle* particles, unsigned int size) {
     double *result = new double[6];
     for (int i = 0; i < 3; ++i) {
         result[i] = INFINITY;
         result[3 + i] = -INFINITY;
     }
-    for (auto it = particles->begin(); it < particles->end(); ++it) {
+    for (const Particle* it = particles; it < particles + size; ++it) {
         Vec3<double> pos = it->getPosition();
         for (int dim = 0; dim < 3; ++dim) {
             double coord = pos.getDim(dim);
@@ -148,8 +148,9 @@ double *computeParticleBoundaries(const vector<Particle> *particles) {
     return result;
 }
 
-void printParticles(const vector<Particle> *particles, ostream &out) {
-    for (auto it = particles->begin(); it < particles->end(); ++it) {
-        cout << *it << endl;
+void printParticles(const Particle *particles, unsigned int size, ostream &out) {
+    for (unsigned int i = 0; i < size; ++i) {
+        out << particles[i] << endl;
     }
 }
+

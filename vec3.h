@@ -38,6 +38,8 @@ public:
 
     void operator*=(const T &value);
 
+    // Vec3 operator/(const T &value) const;
+
     Vec3 operator/(const T &value) const;
 
     void operator/=(const T &value);
