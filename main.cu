@@ -130,8 +130,8 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
     cudaMemcpy(partPositionsCuda, partPositions, sizeof(unsigned int)*(nOfParticles), cudaMemcpyHostToDevice);
     cudaMemcpy(particlesCuda, particles, sizeof(Particle)*(nOfParticles), cudaMemcpyHostToDevice);
 
-
-    nbodyBarnesHutCuda <<<1,  nOfParticles>>>(flatTreeCuda, partPositionsCuda, particlesCuda, forcesCuda, nOfParticles, 0);
+    int nOfBlocks = (nOfParticles - 1) / 1024 + 1;
+    nbodyBarnesHutCuda <<<nOfBlocks,  min(nOfParticles, 1024)>>>(flatTreeCuda, partPositionsCuda, particlesCuda, forcesCuda, nOfParticles, 0);
 
     cudaDeviceSynchronize();
 
