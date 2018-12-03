@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cmath>
 #include "simple_cell.h"
 
@@ -38,6 +39,7 @@ __device__ Vec3<double> SimpleCell::getForce(const Particle *particles) const {
         getForceSiblings(particles[c->particle], force);
         c = getCell(c->parent);
     }
+   printf("Force %lf %lf %lf\n", force.x, force.y, force.z);
     return force;
 }
 

@@ -1,9 +1,9 @@
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <ctime>
 #include <fstream>
-#include <cstdio>
 
 #include "main.h"
 #include "cell.h"
@@ -109,7 +109,7 @@ __global__ void nbodyBarnesHutCuda(
     Vec3<double> force = particleCell->getForce(particles);
     printf("Force: %lf %lf %lf\n", force.x, force.y, force.z);
     Vec3<double> acceleration = force / particles[index].mass;
-    printf("Acc: %lf\n", acceleration);
+//    printf("Acc: %lf\n", acceleration);
     particles[index].accelerate(acceleration);
     particles[index].updatePosition();
 }
