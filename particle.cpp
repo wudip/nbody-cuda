@@ -18,11 +18,11 @@ const Vec3<double> &Particle::getPosition() const {
 /**
  * Updates position of the particle according to its velocity
  */
-void Particle::updatePosition() {
+__device__ void Particle::updatePosition() {
     position += velocity;
 }
 
-void Particle::accelerate(Vec3<double> acceleration) {
+__device__ void Particle::accelerate(Vec3<double> acceleration) {
     velocity += acceleration;
 }
 

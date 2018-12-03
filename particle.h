@@ -26,9 +26,9 @@ public:
     /**
      * Updates position of the particle according to its velocity
      */
-    void updatePosition();
+    __device__ void updatePosition();
 
-    void accelerate(Vec3<double> acceleration);
+    __device__ void accelerate(Vec3<double> acceleration);
 
     friend std::ostream &operator<<(std::ostream &o, const Particle &particle);
 };
