@@ -92,20 +92,41 @@ vector<Vec3<double>> nbody(const vector<Particle> *particles) {
     return forces;
 }
 
+__global__ void nbodyBarnesHutCuda(SimpleCell * cells, unsigned int * partPositons) {
+    for (unsigned int index = 0; index < nOfParticles; ++index) {
+        SimpleCell *particleCell = cells + partPositions[index];
+        Vec3<double> force = particleCell->getForce(particles);
+        Vec3<double> acceleration = force / particles[index].mass;
+        particles[index].accelerate(acceleration);
+        particles[index].updatePosition();
+    }
+}
+
 Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
     Vec3<double> *forces = new Vec3<double>[nOfParticles];
     pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles);
     SimpleCell *flatTree = serialized.first;
     unsigned int *partPositions = serialized.second;
-    for (unsigned int index = 0; index < nOfParticles; ++index) {
-        SimpleCell *particleCell = flatTree + partPositions[index];
-        Vec3<double> force = particleCell->getForce(particles);
-        forces[index] = force;
-//        forces[index] = Vec3<double>(0, 0, 0);
-//        Vec3<double> acceleration = force / particles[index].mass;
-//        particles[index].accelerate(acceleration);
-//        particles[index].updatePosition();
-    }
+
+    SimpleCell *flatTreeCuda;
+    unsigned int * partPositionsCuda;
+    Vec3<double> * forcesCuda;
+
+    cudaMalloc((void**)&flatTreeCuda, (nOfParticles) * sizeof(SimpleCell));
+    cudaMalloc((void**)&partPositionsCuda, (nOfParticles) * sizeof(unsigned int));
+    cudaMalloc((void**)&forcesCuda, (nOfParticles) * sizeof(Vec3<double>));
+
+    cudaMemcpy(flatTreeCuda, flatTree, sizeof(SimpleCell)*(nOfParticles), cudaMemcpyHostToDevice);
+    cudaMemcpy(partPositionsCuda, partPositions, sizeof(unsigned int)*(nOfParticles), cudaMemcpyHostToDevice);
+
+    nbodyBarnesHutCuda<<<1, 1>>>(flatTreeCuda, partPositions);
+
+    cudaMemcpy(forcesCuda, forces, sizeof(Vec3<double>)*(nOfParticles), cudaMemcpyDeviceToHost);
+
+    cudaFree(flatTreeCuda);
+    cudaFree(partPositionsCuda);
+    cudaFree(forcesCuda);
+
     delete[] flatTree;
     delete[] partPositions;
     return forces;
