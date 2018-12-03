@@ -42,9 +42,9 @@ protected:
      */
     unsigned int subtree[NUM_OF_SUBCELLS];
 
-    const SimpleCell *getCell(unsigned int position) const;
+    __device__ const SimpleCell *getCell(unsigned int position) const;
 
-    void getForceSiblings(const Particle &refParticle, Vec3<double> &forces) const;
+    __device__ void getForceSiblings(const Particle &refParticle, Vec3<double> &forces) const;
 
 public:
     SimpleCell();
@@ -52,9 +52,9 @@ public:
     SimpleCell(unsigned int offset, unsigned int particle, const Particle &center, unsigned int parent,
                unsigned int *sub);
 
-    Vec3<double> getForce(const Particle *particles) const;
+    __device__ Vec3<double> getForce(const Particle *particles) const;
 };
 
-void addToForces(Vec3<double> &forces, const Particle &particle, const Particle &sibPart);
+__device__ void addToForces(Vec3<double> &forces, const Particle &particle, const Particle &sibPart);
 
 #endif //BAKAJ_WUDI_CUDA_SIMPLE_CELL_H

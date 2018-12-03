@@ -16,12 +16,12 @@ SimpleCell::SimpleCell(unsigned int offset, unsigned int particle, const Particl
     }
 }
 
-const SimpleCell *SimpleCell::getCell(unsigned int position) const {
+__device__ const SimpleCell *SimpleCell::getCell(unsigned int position) const {
     int diff = position - offset;
     return this + diff;
 }
 
-void SimpleCell::getForceSiblings(const Particle &refParticle, Vec3<double> &forces) const {
+__device__ void SimpleCell::getForceSiblings(const Particle &refParticle, Vec3<double> &forces) const {
     for (int i = 0; i < NUM_OF_SUBCELLS; ++i) {
         unsigned int sibIndex = getCell(parent)->subtree[i];
         if (sibIndex == offset) continue;
@@ -31,7 +31,7 @@ void SimpleCell::getForceSiblings(const Particle &refParticle, Vec3<double> &for
     }
 }
 
-Vec3<double> SimpleCell::getForce(const Particle *particles) const {
+__device__ Vec3<double> SimpleCell::getForce(const Particle *particles) const {
     Vec3<double> force(0, 0, 0);
     const SimpleCell *c = this;
     while (IS_NOT_EMPTY(c->parent)) {
@@ -41,7 +41,7 @@ Vec3<double> SimpleCell::getForce(const Particle *particles) const {
     return force;
 }
 
-void addToForces(Vec3<double> &forces, const Particle &particle, const Particle &sibPart) {
+__device__ void addToForces(Vec3<double> &forces, const Particle &particle, const Particle &sibPart) {
     Vec3<double> diff = particle.getPosition() - sibPart.getPosition();
     double bottom = pow(diff.sqrSize() + SOFTENING_FACTOR_SQR, 1.5);
     double massTotal = GRAVITATION_CONSTANT * particle.mass * sibPart.mass;
