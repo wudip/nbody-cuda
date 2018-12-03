@@ -1,4 +1,5 @@
 #include "particle.h"
+#include <cstdio>
 
 class Cell;
 
@@ -19,10 +20,12 @@ __host__ __device__ const Vec3<double> &Particle::getPosition() const {
  * Updates position of the particle according to its velocity
  */
 __host__ __device__ void Particle::updatePosition() {
+    printf("Velocity: %lf %lf %lf\n", velocity.x, velocity.y, velocity.z);
     position += velocity;
 }
 
 __host__ __device__ void Particle::accelerate(Vec3<double> acceleration) {
+    printf("Acceleration: %lf %lf %lf\n", acceleration.x, acceleration.y, acceleration.z);
     velocity += acceleration;
 }
 

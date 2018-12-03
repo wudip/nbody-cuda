@@ -3,6 +3,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <cstdio>
 
 #include "main.h"
 #include "cell.h"
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
         particles = loadParticles(cin);
     }
     clock_t clk_start = clock();
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 1; ++i) {
         // Create octree
         double *particleBoundaries = computeParticleBoundaries(particles);
 
@@ -99,11 +100,16 @@ __global__ void nbodyBarnesHutCuda(
         unsigned int nOfParticles,
         unsigned int offset)
 {
-    unsigned int index = offset + threadIdx.x + blockIdx.x * blockDimx.x;
-    if (index > nOfParticles) return;
+    unsigned int index = offset + threadIdx.x + blockIdx.x * blockDim.x;
+    printf("Jezinka\n");
+    if (index >= nOfParticles) return;
+    printf("Jelen c. %d\n", partPositions[index]);
     SimpleCell *particleCell = cells + partPositions[index];
+    printf("Smolicek pacholicek\n");
     Vec3<double> force = particleCell->getForce(particles);
+    printf("Force: %lf %lf %lf\n", force.x, force.y, force.z);
     Vec3<double> acceleration = force / particles[index].mass;
+    printf("Acc: %lf\n", acceleration);
     particles[index].accelerate(acceleration);
     particles[index].updatePosition();
 }
@@ -127,8 +133,10 @@ Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cel
 
 
     // for (unsigned int index = 0; index < nOfParticles; ++index) {
-        nbodyBarnesHutCuda << < nOfParticles / 1024, 1024>> > (flatTreeCuda, partPositions, particles, nOfParticles);
+        nbodyBarnesHutCuda <<<nOfParticles / 1024, 1024>>>(flatTreeCuda, partPositions, particles, nOfParticles, 0);
     // }
+
+    cudaDeviceSynchronize();
 
     cudaMemcpy(particles, particlesCuda, sizeof(Particle)*(nOfParticles), cudaMemcpyDeviceToHost);
 
