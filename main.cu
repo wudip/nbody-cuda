@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
         octree.updateCenter();
 
 
-        Vec3<double> *forces = nbodyBarnesHut(particleArr, size, octree);
+        nbodyBarnesHut(particleArr, size, octree);
 
         // delete new particles
         for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
@@ -54,8 +54,6 @@ int main(int argc, char **argv) {
         delete[] particleArr;
 
         //vector<Vec3<double>> forces = nbody(particles);
-        moveParticles(particles, forces);
-        delete forces;
     }
     clock_t clk_end = clock();
     cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
@@ -97,6 +95,7 @@ __global__ void nbodyBarnesHutCuda(
         SimpleCell * cells,
         unsigned int * partPositions,
         Particle * particles,
+        Vec3<double>* forces,
         unsigned int nOfParticles,
         unsigned int offset)
 {
@@ -110,11 +109,12 @@ __global__ void nbodyBarnesHutCuda(
     printf("Force: %lf %lf %lf\n", force.x, force.y, force.z);
     Vec3<double> acceleration = force / particles[index].mass;
 //    printf("Acc: %lf\n", acceleration);
-    particles[index].accelerate(acceleration);
-    particles[index].updatePosition();
+    forces[index] = acceleration;
+    //particles[index].accelerate(acceleration);
+    //particles[index].updatePosition();
 }
 
-Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
+void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
     pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles);
     SimpleCell *flatTree = serialized.first;
     unsigned int *partPositions = serialized.second;
@@ -122,20 +122,24 @@ Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cel
     SimpleCell *flatTreeCuda;
     unsigned int * partPositionsCuda;
     Particle * particlesCuda;
+    Vec3<double>* forcesCuda;
 
     cudaMalloc((void**)&flatTreeCuda, (nOfParticles) * sizeof(SimpleCell));
     cudaMalloc((void**)&partPositionsCuda, (nOfParticles) * sizeof(unsigned int));
     cudaMalloc((void**)&particlesCuda, (nOfParticles) * sizeof(Particle));
+    cudaMalloc((void**)&forcesCuda, (nOfParticles) * sizeof(Vec3<double>));
 
     cudaMemcpy(flatTreeCuda, flatTree, sizeof(SimpleCell)*(nOfParticles), cudaMemcpyHostToDevice);
     cudaMemcpy(partPositionsCuda, partPositions, sizeof(unsigned int)*(nOfParticles), cudaMemcpyHostToDevice);
     cudaMemcpy(particlesCuda, particles, sizeof(Particle)*(nOfParticles), cudaMemcpyHostToDevice);
 
 
-    // for (unsigned int index = 0; index < nOfParticles; ++index) {
-        nbodyBarnesHutCuda <<<nOfParticles / 1024, 1024>>>(flatTreeCuda, partPositions, particles, nOfParticles, 0);
-    // }
+    nbodyBarnesHutCuda <<<nOfParticles / 1024, 1024>>>(flatTreeCuda, partPositionsCuda, particlesCuda, forcesCuda, nOfParticles, 0);
 
+    cudaDeviceSynchronize();
+
+    moveParticles<<<1,1>>>(particlesCuda, forcesCuda, nOfParticles);
+    
     cudaDeviceSynchronize();
 
     cudaMemcpy(particles, particlesCuda, sizeof(Particle)*(nOfParticles), cudaMemcpyDeviceToHost);
@@ -143,21 +147,16 @@ Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cel
     cudaFree(flatTreeCuda);
     cudaFree(partPositionsCuda);
     cudaFree(particlesCuda);
+    cudaFree(forcesCuda);
 
     delete[] flatTree;
     delete[] partPositions;
-
-    Vec3<double> *forces = new Vec3<double>[nOfParticles];
-    for (unsigned int index = 0; index < nOfParticles; ++index) {
-        forces[index] = Vec3<double>(0, 0, 0);
-    }
-    return forces;
 }
 
-void moveParticles(vector<Particle> *particles, const Vec3<double> *forces) {
-    auto particleIt = particles->begin();
+__global__ void moveParticles(Particle *particles, const Vec3<double> *forces, unsigned int n) {
+    auto particleIt = particles;
     auto forceIt = forces;
-    while (particleIt < particles->end()) {
+    for(unsigned int i = 0; i < n; i++) {
         Vec3<double> acceleration = *forceIt / particleIt->mass;
         particleIt->accelerate(acceleration);
         particleIt->updatePosition();
