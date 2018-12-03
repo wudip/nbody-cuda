@@ -92,14 +92,20 @@ vector<Vec3<double>> nbody(const vector<Particle> *particles) {
     return forces;
 }
 
-__global__ void nbodyBarnesHutCuda(SimpleCell * cells, unsigned int * partPositions, Particle * particles, unsigned int nOfParticles) {
-    for (unsigned int index = 0; index < nOfParticles; ++index) {
-        SimpleCell *particleCell = cells + partPositions[index];
-        Vec3<double> force = particleCell->getForce(particles);
-        Vec3<double> acceleration = force / particles[index].mass;
-        particles[index].accelerate(acceleration);
-        particles[index].updatePosition();
-    }
+__global__ void nbodyBarnesHutCuda(
+        SimpleCell * cells,
+        unsigned int * partPositions,
+        Particle * particles,
+        unsigned int nOfParticles,
+        unsigned int offset)
+{
+    unsigned int index = offset + threadIdx.x + blockIdx.x * blockDimx.x;
+    if (index > nOfParticles) return;
+    SimpleCell *particleCell = cells + partPositions[index];
+    Vec3<double> force = particleCell->getForce(particles);
+    Vec3<double> acceleration = force / particles[index].mass;
+    particles[index].accelerate(acceleration);
+    particles[index].updatePosition();
 }
 
 Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
@@ -119,7 +125,10 @@ Vec3<double> *nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cel
     cudaMemcpy(partPositionsCuda, partPositions, sizeof(unsigned int)*(nOfParticles), cudaMemcpyHostToDevice);
     cudaMemcpy(particlesCuda, particles, sizeof(Particle)*(nOfParticles), cudaMemcpyHostToDevice);
 
-    nbodyBarnesHutCuda<<<1, 1>>>(flatTreeCuda, partPositions, particles, nOfParticles);
+
+    // for (unsigned int index = 0; index < nOfParticles; ++index) {
+        nbodyBarnesHutCuda << < nOfParticles / 1024, 1024>> > (flatTreeCuda, partPositions, particles, nOfParticles);
+    // }
 
     cudaMemcpy(particles, particlesCuda, sizeof(Particle)*(nOfParticles), cudaMemcpyDeviceToHost);
 
