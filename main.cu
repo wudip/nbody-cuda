@@ -7,7 +7,6 @@
 
 #include "main.h"
 #include "cell.h"
-#include "cuPrintf.cuh"
 
 // Softening factor squared
 #define SOFTENING_FACTOR_SQR 0.5
@@ -101,13 +100,13 @@ __global__ void nbodyBarnesHutCuda(
         unsigned int offset)
 {
     unsigned int index = offset + threadIdx.x + blockIdx.x * blockDim.x;
-    cuPrintf("Jezinka\n");
+    printf("Jezinka\n");
     if (index >= nOfParticles) return;
-    cuPrintf("Jelen c. %d\n", partPositions[index]);
+    printf("Jelen c. %d\n", partPositions[index]);
     SimpleCell *particleCell = cells + partPositions[index];
-    cuPrintf("Smolicek pacholicek\n");
+    printf("Smolicek pacholicek\n");
     Vec3<double> force = particleCell->getForce(particles);
-    cuPrintf("Force: %lf %lf %lf\n", force.x, force.y, force.z);
+    printf("Force: %lf %lf %lf\n", force.x, force.y, force.z);
     Vec3<double> acceleration = force / particles[index].mass;
 //    printf("Acc: %lf\n", acceleration);
     forces[index] = acceleration;
