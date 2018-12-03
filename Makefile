@@ -18,7 +18,7 @@ particle.o: particle.cu particle.h vec3.o cuPrintf.o
 vec3.o: vec3.cu vec3.h cuPrintf.o
 	$(CC) $(CFLAG) -dc vec3.cu cuPrintf.o
 
-vec3.o: cuPrintf.cu cuPrintf.cuh
+cuPrintf.o: cuPrintf.cu cuPrintf.cuh
 	$(CC) $(CFLAG) -dc cuPrintf.cu
 
 generator:
