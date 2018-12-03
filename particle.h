@@ -21,14 +21,14 @@ public:
 
     Particle &operator=(const Particle &p) = default;
 
-    const Vec3<double> &getPosition() const;
+    __host__ __device__ const Vec3<double> &getPosition() const;
 
     /**
      * Updates position of the particle according to its velocity
      */
-    __device__ void updatePosition();
+    __host__ __device__ void updatePosition();
 
-    __device__ void accelerate(Vec3<double> acceleration);
+    __host__ __device__ void accelerate(Vec3<double> acceleration);
 
     friend std::ostream &operator<<(std::ostream &o, const Particle &particle);
 };

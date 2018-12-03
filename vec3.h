@@ -8,9 +8,9 @@ class Vec3 {
 public:
     T x, y, z;
 
-    Vec3();
+    __host__ __device__ Vec3();
 
-    Vec3(T x, T y, T z);
+    __host__ __device__ Vec3(T x, T y, T z);
 
     void set(const T &x, const T &y, const T &z);
 
@@ -22,27 +22,29 @@ public:
 
     T dotProduct(const Vec3 &vec) const;
 
-    static T getDistance(const Vec3 &a, const Vec3 &b);
+    __host__ __device__ static T getDistance(const Vec3 &a, const Vec3 &b);
 
-    Vec3 operator+(const Vec3 &vector) const;
+    __host__ __device__ Vec3 operator+(const Vec3 &vector) const;
 
-    void operator+=(const Vec3 &vector);
+    __host__ __device__ void operator+=(const Vec3 &vector);
 
-    Vec3 operator-(const Vec3 &vector) const;
+    __host__ __device__ Vec3 operator-(const Vec3 &vector) const;
 
-    void operator-=(const Vec3 &vector);
+    __host__ __device__ void operator-=(const Vec3 &vector);
 
-    Vec3 operator*(const Vec3 &vector) const;
+    __host__ __device__ Vec3 operator*(const Vec3 &vector) const;
 
-    Vec3 operator*(const T &value) const;
+    __host__ __device__ Vec3 operator*(const T &value) const;
 
-    void operator*=(const T &value);
+    __host__ __device__ void operator*=(const T &value);
 
-    Vec3 operator/(const T &value) const;
+    // Vec3 operator/(const T &value) const;
 
-    void operator/=(const T &value);
+    __host__ __device__ Vec3 operator/(const T &value) const;
 
-    T sqrSize();
+    __host__ __device__ void operator/=(const T &value);
+
+    __host__ __device__ T sqrSize();
 
     double getDim(int dimension) const;
 
