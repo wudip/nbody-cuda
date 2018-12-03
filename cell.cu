@@ -157,8 +157,9 @@ unsigned int Cell::getNumOfNodes() const {
     return numOfCells;
 }
 
-pair<SimpleCell *, unsigned int *> Cell::serialize(const Particle * partBeginning) const {
-    SimpleCell* cells = new SimpleCell[getNumOfNodes()];
+pair<SimpleCell *, unsigned int *> Cell::serialize(const Particle * partBeginning, unsigned int & size) const {
+    size = getNumOfNodes();
+    SimpleCell* cells = new SimpleCell[size];
     unsigned int* partMapping = new unsigned int[getNumOfNodes()];
     unsigned int index = 0;
     serialize(cells, partMapping, partBeginning, index, (unsigned int) -1);

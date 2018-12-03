@@ -61,7 +61,7 @@ public:
      * Creates new array of all cells in subtree
      * @param partBeginning beginning of array of particles (necessary to get position of the particle)
      */
-    std::pair<SimpleCell *, unsigned int *> serialize(const Particle *partBeginning) const;
+    std::pair<SimpleCell *, unsigned int *> serialize(const Particle *partBeginning, unsigned int & size) const;
 };
 
 #endif //BAKAJ_WUDI_CUDA_CELL_H

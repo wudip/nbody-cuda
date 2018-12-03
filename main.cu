@@ -115,7 +115,8 @@ __global__ void nbodyBarnesHutCuda(
 }
 
 void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) {
-    pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles);
+    unsigned int nOfCells;
+    pair<SimpleCell *, unsigned int *> serialized = cell.serialize(particles, nOfCells);
     SimpleCell *flatTree = serialized.first;
     unsigned int *partPositions = serialized.second;
 
@@ -124,12 +125,12 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
     Particle * particlesCuda;
     Vec3<double>* forcesCuda;
 
-    cudaMalloc((void**)&flatTreeCuda, (nOfParticles) * sizeof(SimpleCell));
+    cudaMalloc((void**)&flatTreeCuda, (nOfCells) * sizeof(SimpleCell));
     cudaMalloc((void**)&partPositionsCuda, (nOfParticles) * sizeof(unsigned int));
     cudaMalloc((void**)&particlesCuda, (nOfParticles) * sizeof(Particle));
     cudaMalloc((void**)&forcesCuda, (nOfParticles) * sizeof(Vec3<double>));
 
-    cudaMemcpy(flatTreeCuda, flatTree, sizeof(SimpleCell)*(nOfParticles), cudaMemcpyHostToDevice);
+    cudaMemcpy(flatTreeCuda, flatTree, sizeof(SimpleCell)*(nOfCells), cudaMemcpyHostToDevice);
     cudaMemcpy(partPositionsCuda, partPositions, sizeof(unsigned int)*(nOfParticles), cudaMemcpyHostToDevice);
     cudaMemcpy(particlesCuda, particles, sizeof(Particle)*(nOfParticles), cudaMemcpyHostToDevice);
 
