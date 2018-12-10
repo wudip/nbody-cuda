@@ -26,16 +26,17 @@ int main(int argc, char **argv) {
         particles = loadParticles(cin);
     }
     clock_t clk_start = clock();
+
+    // Move particles from vector to array
+    unsigned int size = (unsigned int) particles->size();
+    Particle* particleArr = new Particle[size];
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+	particleArr[pit - particles->begin()] = * pit;
+    }
+
     for (int i = 0; i < 1000; ++i) {
         // Create octree
         double *particleBoundaries = computeParticleBoundaries(particles);
-
-        // move particles from vector to array
-        unsigned int size = (unsigned int) particles->size();
-        Particle *particleArr = new Particle[size];
-        for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-            particleArr[pit - particles->begin()] = *pit;
-        }
 
         Cell octree(particleBoundaries, particleBoundaries + 3);
         delete[] particleBoundaries;
@@ -55,6 +56,11 @@ int main(int argc, char **argv) {
 
         //vector<Vec3<double>> forces = nbody(particles);
     }
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+	*pit = particleArr[pit - particles->begin()];
+    }
+    delete[] particleArr;
+
     clock_t clk_end = clock();
     cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
     printParticles(particles, cout);
