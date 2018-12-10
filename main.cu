@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     }
     delete particles;
 
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 1; ++i) {
         // Create octree
         double *particleBoundaries = computeParticleBoundaries(particleArr, size);
         Cell octree(particleBoundaries, particleBoundaries + 3);
@@ -52,8 +52,8 @@ int main(int argc, char **argv) {
     }
 
     clock_t clk_end = clock();
-    cout << "Time: " << (clk_end - clk_start) << " ms" << endl;
     printParticles(particleArr, size, cout);
+    cout << "Time: " << ((clk_end - clk_start)/(CLOCKS_PER_SEC/1000)) << " ms" << endl;
     delete[] particleArr;
     return 0;
 }
@@ -98,7 +98,7 @@ __global__ void nbodyBarnesHutCuda(
     unsigned int index = offset + threadIdx.x + blockIdx.x * blockDim.x;
     if (index >= nOfParticles) return;
     SimpleCell *particleCell = cells + partPositions[index];
-    Vec3<double> force = particleCell->getForce(particles) * 100;
+    Vec3<double> force = particleCell->getForce(particles) * 10000;
     Vec3<double> acceleration = force / particles[index].mass;
 //    printf("Acc: %lf\n", acceleration);
     forces[index] = acceleration;
@@ -133,7 +133,6 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
 
     moveParticles<<<1,1>>>(particlesCuda, forcesCuda, nOfParticles);
 
-    printf("\n%d\n", nOfCells);
     cudaDeviceSynchronize();
 
     cudaMemcpy(particles, particlesCuda, sizeof(Particle)*(nOfParticles), cudaMemcpyDeviceToHost);
@@ -154,7 +153,6 @@ __global__ void moveParticles(Particle *particles, const Vec3<double> *forces, u
         Vec3<double> acceleration = *forceIt / particleIt->mass;
         particleIt->accelerate(acceleration);
         particleIt->updatePosition();
-        printf("[%.4e %.4e %.4e], ", acceleration.x, acceleration.y, acceleration.z);
         ++particleIt;
         ++forceIt;
     }
