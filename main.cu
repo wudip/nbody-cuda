@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 
     for (int i = 0; i < 1000; ++i) {
         // Create octree
-        double *particleBoundaries = computeParticleBoundaries(particles, size);
+        double *particleBoundaries = computeParticleBoundaries(particleArr, size);
         Cell octree(particleBoundaries, particleBoundaries + 3);
         delete[] particleBoundaries;
         for (unsigned int partIndex = 0; partIndex < size; ++partIndex) {
