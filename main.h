@@ -15,8 +15,8 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell);
 
 __global__ void moveParticles(Particle *particles, const Vec3<double> *forces, unsigned int nOfParticles);
 
-void printParticles(const std::vector<Particle> *particles, std::ostream &out);
+void printParticles(const Particle *particles, unsigned int size, std::ostream &out);
 
-double *computeParticleBoundaries(const std::vector<Particle> *particles);
+double *computeParticleBoundaries(const Particle *particles, unsigned int size);
 
 #endif //BAKAJ_WUDI_CUDA_MAIN_H
