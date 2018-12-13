@@ -12,62 +12,66 @@
 #define SOFTENING_FACTOR_SQR 0.5
 #define GRAVITATION_CONSTANT 6.67300E-11
 #define WINDOWS_SUCKS 1
+#define NUM_REPEATS 5
 
 using namespace std;
 
 int main(int argc, char **argv) {
-    vector<Particle> *particles;
+    // Load input
+    std::pair<Particle*, unsigned int> input;
     if (WINDOWS_SUCKS && argc > 1) {
         std::ifstream ifs;
         ifs.open(argv[1], ifstream::in);
-        particles = loadParticles(ifs);
+        input = loadParticles(ifs);
         ifs.close();
     } else {
-        particles = loadParticles(cin);
+        input = loadParticles(cin);
     }
+    particles = input.first;
+    unsigned int size = input.second;
+    if (particles == null) return;
+
+    // Actual algorithm
     clock_t clk_start = clock();
-
-    // Move particles from vector to array
-    unsigned int size = (unsigned int) particles->size();
-    Particle* particleArr = new Particle[size];
-    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-        particleArr[pit - particles->begin()] = * pit;
-    }
-    delete particles;
-
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < NUM_REPEATS; ++i) {
         // Create octree
-        double *particleBoundaries = computeParticleBoundaries(particleArr, size);
+        double *particleBoundaries = computeParticleBoundaries(particles, size);
         Cell octree(particleBoundaries, particleBoundaries + 3);
         delete[] particleBoundaries;
         for (unsigned int partIndex = 0; partIndex < size; ++partIndex) {
-            octree.add(particleArr + partIndex);
+            octree.add(particles + partIndex);
         }
         octree.updateCenter();
-
-
-        nbodyBarnesHut(particleArr, size, octree);
-
-        //vector<Vec3<double>> forces = nbody(particles);
+        // Solve N-body problem
+        nbodyBarnesHut(particles, size, octree);
     }
-
     clock_t clk_end = clock();
-    printParticles(particleArr, size, cout);
-    cout << "Time: " << ((clk_end - clk_start)/(CLOCKS_PER_SEC/1000)) << " ms" << endl;
-    delete[] particleArr;
+    printParticles(particles, size, cout);
+    delete[] particles;
+    long time = (clk_end - clk_start) / (CLOCKS_PER_SEC / 1000);
+    cout << "Time: " << time << " ms" << endl;
     return 0;
 }
 
-vector<Particle> *loadParticles(istream &input) {
-    vector<Particle> *particles = new vector<Particle>();
+pair<Particle *, unsigned int> loadParticles(istream &input) {
+    // Loading vector
+    vector<Particle> particles;
     double x;
     double y;
     double z;
     double mass;
     while (input >> x && input >> y && input >> z && input >> mass) {
-        particles->push_back(Particle(x, y, z, mass));
+        particles.push_back(Particle(x, y, z, mass));
     }
-    return particles;
+
+    // Move particles from vector to array
+    unsigned int size = (unsigned int) particles->size();
+    Particle* particleArr = size == 0 ? null : new Particle[size];
+    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
+        particleArr[pit - particles->begin()] = * pit;
+    }
+
+    return pair(particleArr, size);
 }
 
 vector<Vec3<double>> nbody(const vector<Particle> *particles) {
