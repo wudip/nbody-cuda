@@ -3,11 +3,12 @@
 
 #include <iostream>
 #include <vector>
+#include <utility>
 
 #include "vec3.h"
 #include "particle.h"
 
-std::vector<Particle> *loadParticles(std::istream &input);
+std::pair<Particle*, unsigned int> loadParticles(istream &input);
 
 std::vector<Vec3<double>> nbody(const std::vector<Particle> *particles);
 

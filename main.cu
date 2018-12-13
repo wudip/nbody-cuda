@@ -4,6 +4,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <utility>
 
 #include "main.h"
 #include "cell.h"
@@ -18,7 +19,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
     // Load input
-    std::pair<Particle*, unsigned int> input;
+    pair<Particle*, unsigned int> input;
     if (WINDOWS_SUCKS && argc > 1) {
         std::ifstream ifs;
         ifs.open(argv[1], ifstream::in);
