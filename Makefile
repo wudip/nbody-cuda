@@ -18,7 +18,7 @@ particle.o: particle.cpp particle.h vec3.o
 vec3.o: vec3.cpp vec3.h
 	$(CC) $(CFLAG) vec3.cpp -c -o vec3.o
 
-generator:
+generator: generator.cpp
 	$(CC) $(CFLAG) generator.cpp -o generator
 
 clean:

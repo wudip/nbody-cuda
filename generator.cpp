@@ -21,7 +21,7 @@ struct arguments {
 
 arguments *readArguments(int argc, char **argv) {
     arguments *a = new arguments();
-    a->particleSum = 20; // TODO
+    a->particleSum = argc > 1 ? std::stoi(argv[1]) : 500000; // TODO
     a->positionVariance = 0.3; // TODO
     a->massAvg = 5; // TODO
     a->massVariance = 6; // TODO
