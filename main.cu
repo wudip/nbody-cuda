@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
     } else {
         input = loadParticles(cin);
     }
-    particles = input.first;
+    Particle* particles = input.first;
     unsigned int size = input.second;
-    if (particles == null) return;
+    if (particles == nullptr) return 1;
 
     // Actual algorithm
     clock_t clk_start = clock();
@@ -66,13 +66,13 @@ pair<Particle *, unsigned int> loadParticles(istream &input) {
     }
 
     // Move particles from vector to array
-    unsigned int size = (unsigned int) particles->size();
-    Particle* particleArr = size == 0 ? null : new Particle[size];
-    for (auto pit = particles->begin(); pit < particles->end(); ++pit) {
-        particleArr[pit - particles->begin()] = * pit;
+    unsigned int size = (unsigned int) particles.size();
+    Particle* particleArr = size == 0 ? nullptr : new Particle[size];
+    for (auto pit = particles.begin(); pit < particles.end(); ++pit) {
+        particleArr[pit - particles.begin()] = * pit;
     }
 
-    return pair(particleArr, size);
+    return {particleArr, size};
 }
 
 vector<Vec3<double>> nbody(const vector<Particle> *particles) {
