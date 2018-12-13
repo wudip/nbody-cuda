@@ -99,6 +99,7 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
     unsigned int *partPositions = serialized.second;
     Vec3<double>* forces = new Vec3<double>[nOfParticles];
 
+    #pragma acc parallel loop copy(partPositions[0:nOfParticles], flatTree[0:nOfCells], forces[0:nOfParticles], particles[0:nOfParticles])
     for(unsigned int index = 0; index < nOfParticles; ++index) {
         SimpleCell *particleCell = flatTree + partPositions[index];
         Vec3<double> force = particleCell->getForce(particles) * 10000;

@@ -42,8 +42,10 @@ protected:
      */
     unsigned int subtree[NUM_OF_SUBCELLS];
 
+    #pragma acc routine seq
     const SimpleCell *getCell(unsigned int position) const;
 
+    #pragma acc routine seq
     void getForceSiblings(const Particle &refParticle, Vec3<double> &forces) const;
 
 public:
@@ -52,9 +54,11 @@ public:
     SimpleCell(unsigned int offset, unsigned int particle, const Particle &center, unsigned int parent,
                unsigned int *sub);
 
+    #pragma acc routine seq
     Vec3<double> getForce(const Particle *particles) const;
 };
 
+#pragma acc routine seq
 void addToForces(Vec3<double> &forces, const Particle &particle, const Particle &sibPart);
 
 #endif //BAKAJ_WUDI_CUDA_SIMPLE_CELL_H

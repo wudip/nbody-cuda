@@ -21,6 +21,7 @@ public:
 
     Particle &operator=(const Particle &p) = default;
 
+    #pragma acc routine seq
     const Vec3<double> &getPosition() const;
 
     /**

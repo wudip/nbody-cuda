@@ -8,8 +8,10 @@ class Vec3 {
 public:
     T x, y, z;
 
+    #pragma acc routine seq
     Vec3();
 
+    #pragma acc routine seq
     Vec3(T x, T y, T z);
 
     void set(const T &x, const T &y, const T &z);
@@ -22,28 +24,39 @@ public:
 
     T dotProduct(const Vec3 &vec) const;
 
+    #pragma acc routine seq
     static T getDistance(const Vec3 &a, const Vec3 &b);
 
+    #pragma acc routine seq
     Vec3 operator+(const Vec3 &vector) const;
 
+    #pragma acc routine seq
     void operator+=(const Vec3 &vector);
 
+    #pragma acc routine seq
     Vec3 operator-(const Vec3 &vector) const;
 
+    #pragma acc routine seq
     void operator-=(const Vec3 &vector);
 
+    #pragma acc routine seq
     Vec3 operator*(const Vec3 &vector) const;
 
+    #pragma acc routine seq
     Vec3 operator*(const T &value) const;
 
+    #pragma acc routine seq
     void operator*=(const T &value);
 
     // Vec3 operator/(const T &value) const;
 
+    #pragma acc routine seq
     Vec3 operator/(const T &value) const;
 
+    #pragma acc routine seq
     void operator/=(const T &value);
 
+    #pragma acc routine seq
     T sqrSize();
 
     double getDim(int dimension) const;
