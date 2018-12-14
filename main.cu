@@ -136,7 +136,7 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
 
     cudaDeviceSynchronize();
 
-    moveParticles<<<1,1>>>(particlesCuda, forcesCuda, nOfParticles);
+    moveParticles<<<nOfBlocks, min(nOfParticles, 1024)>>>(particlesCuda, forcesCuda, nOfParticles);
 
     cudaDeviceSynchronize();
 
@@ -152,15 +152,12 @@ void nbodyBarnesHut(Particle *particles, unsigned int nOfParticles, Cell &cell) 
 }
 
 __global__ void moveParticles(Particle *particles, const Vec3<double> *forces, unsigned int n) {
-    auto particleIt = particles;
-    auto forceIt = forces;
-    for(unsigned int i = 0; i < n; i++) {
-        Vec3<double> acceleration = *forceIt / particleIt->mass;
-        particleIt->accelerate(acceleration);
-        particleIt->updatePosition();
-        ++particleIt;
-        ++forceIt;
-    }
+    unsigned int index = threadIdx.x + blockIdx.x * blockDim.x;
+    auto particleIt = particles + index;
+    auto forceIt = forces + index;
+    Vec3<double> acceleration = *forceIt / particleIt->mass;
+    particleIt->accelerate(acceleration);
+    particleIt->updatePosition();
 }
 
 /**
