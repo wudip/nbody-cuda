@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         nbodyBarnesHut(particles, size, octree);
     }
     clock_t clk_end = clock();
-    printParticles(particles, size, cout);
+    //printParticles(particles, size, cout);
     delete[] particles;
     long time = (clk_end - clk_start) / (CLOCKS_PER_SEC / 1000);
     cout << "Time: " << time << " ms" << endl;
