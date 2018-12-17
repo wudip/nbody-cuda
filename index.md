@@ -12,15 +12,15 @@ Rychlost programu byla mnohonásobně lepší jak u naší CUDA implementace, al
 ## CUDA
 Stejně jak u OpenACC, to že jsme se snažili napsat program tak aby byl čitelný a dal se lehce v budoucnosti rozvýjet dále. Takto tyto všechny faktory opět hrály proti nám.
 
-Naše řešení vypadá následovně: Na grafický akcelerátor kopírujeme struktury k výpočtu octo-tree, ketrý je serializovaný do tabulky, poté pomocné pole s pozicema částit v tabulce a nakonec pole, které obsahuje inforamce o částicích. Počet vláken v bloku vypočítaváme jako `(počet částic -1) / 1024 + 1` a počet bloků je roven číslu `min(nOfParticles, 1024)` . S těmito prametry poté voláme proceduru, které se vykonává na grafickém akcelerátoru a vypočítáváme jednotlivé síly působící na jednotlivé částice. Následně synchronizujeme zařízení a provedeme ještě paralelně posun částic o výše vypočítané síly a opět synchronizujeme zařízení. Samozřejmě na konci bloku uvolníme alokovanou pamět na grafické kartě.
+Naše řešení vypadá následovně: Na grafický akcelerátor kopírujeme struktury k výpočtu octo-tree, ketrý je serializovaný do tabulky, poté pomocné pole s pozicema částit v tabulce a nakonec pole, které obsahuje inforamce o částicích. Počet vláken v bloku vypočítaváme jako `min(nOfParticles, 1024)` a počet bloků je roven číslu `(počet částic -1) / 1024 + 1` . S těmito prametry poté voláme proceduru, která je vykonávána na grafickém akcelerátoru a vypočítáváme jednotlivé síly působící na jednotlivé částice. Následně synchronizujeme zařízení a provedeme ještě paralelně posun částic o výše vypočítané síly a opět synchronizujeme zařízení. Samozřejmě na konci bloku uvolníme alokovanou pamět na grafické kartě.
 ## Shrnutí výsledků
-Měření probíhalo na serveru star na grafickým akcelerátoru nVidia Tesla a lokálně na procesoru Intel Core i7-8700K.
+Měření probíhalo na serveru star na grafickém akcelerátoru nVidia Tesla a lokálně na procesoru Intel Core i7-8700K.
 
 ### Graf časů v závilosti na velikosti instance
 
 ![alt text](graph.PNG "Graph")
 
-Z naměřených výsledků lze vidět že OpenACC je nejrychlejší, ale z důvodů vysoké paměťové náročnosti, jsme nedokázali změřit více výsledků. CUDA řešení je sice rychlejší, ale né o tolik oproti sekvenčnímu řešení. Je to z důvodů vysoké časové řežie při vytváření octo-tree a počítání středů jednotlivých clusterů.
+Z naměřených výsledků lze vidět že CUDA řešení je nejrychlejší, poté následuje OpenACC, ale z důvodů vysoké paměťové náročnosti, jsme nedokázali změřit více výsledků. Když jsme zkoumali poměr zrychlení CUDA řešní vůči sekvenčnímu, tak dostahujeme zrychlení přibližně trojnásobné.
 
 ## Závěr
 Závěrem bychom chtěli říct, že jsme si vědomi že naše výsledky nejsou úplně optimální, ale víme jak bychom je mohli napravit. Jedná se hlavně o paralelizaci výtváření a počítání středů v octo-tree. Která je nezbytná pro algoritmus Barnes-Hut. Cílem toho předmětu ale není vytvořit nejoptimálnější CUDA řešení pro N-Body problém, ale vyzkoušet si jednotlivé druhy paralelizace na grafickým akcelerátoru a zjistit co to obnáší za nástrahy. Timto si myslíme, že jsme cíl tohoto předmětu splnili.
